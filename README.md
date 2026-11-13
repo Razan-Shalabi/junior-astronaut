@@ -24,7 +24,16 @@ Controls: WASD or arrow keys to walk, Shift to run, Space to jump, drag to look 
 - A hilltop view where Nuri explains how Mars differs from Earth
 - The Junior Astronaut Training Academy appears, leading to Level 2
 
-Level 2 (the Training Academy) is not built yet.
+**Level 2: Junior Astronaut Training Academy**
+
+Five training rooms. Each one earns a stamp in the Astronaut Passport, and all five open the launch bay.
+1. Find Your Destination: explore a moving solar system, pick Earth and Mars, wait for the launch window, and choose the curved route that meets Mars where it will be
+2. Suit Up!: drag the helmet, gloves, boots and life support pack onto a training dummy, then test pressure, oxygen and cooling
+3. Pack for Survival: load the cargo bay within a 100-point limit, keeping water, food, medicine and tools
+4. Systems Check: find the system with a warning (power or communication) and fix it
+5. Mission Emergency!: power drops to 6 units, so choose which systems stay on
+
+Level 3 (launch to Mars) is not built yet. The title screen has shortcuts to jump straight to Level 1 or Level 2.
 
 ## Science
 
