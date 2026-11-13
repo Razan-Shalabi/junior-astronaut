@@ -1,0 +1,771 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Mission: Red Base</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a mission console. Live Mars scene on top, life-support gauges and the decision card side by side below. */
+:root {
+  color-scheme: dark;
+  --night: #140e0d;
+  --panel: #1e1614;
+  --panel-2: #291e1b;
+  --line: #3e2d29;
+  --ink: #f3e7dc;
+  --muted: #b5a094;
+  --rust: #d2602c;
+  --butter: #e3b47a;
+  --sunset: #8cbbe0;
+  --ok: #86c98f;
+  --warn: #e8b04a;
+  --bad: #ec5a50;
+  --r-o2: #9ad6ea;
+  --r-water: #5a9be0;
+  --r-food: #8fc66c;
+  --r-power: #ecc24c;
+  --r-health: #ee7f82;
+  --r-science: #e3b47a;
+  --f-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--night);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+/* Top bar */
+.topbar { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 26px; letter-spacing: .04em; text-transform: uppercase; line-height: 1.1; }
+.brand span { color: var(--rust); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 500; }
+
+/* Scene */
+.stage { position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #000; }
+.stage canvas { display: block; width: 100%; aspect-ratio: 16 / 6.4; max-width: 100%; }
+.hud { position: absolute; left: 12px; top: 10px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+.hud-chip { font-family: var(--f-mono); font-size: 12px; background: rgba(15,10,9,.62); border: 1px solid rgba(255,255,255,.12); padding: 3px 9px; border-radius: 3px; color: var(--ink); backdrop-filter: blur(3px); }
+.hud-chip.alert { border-color: var(--bad); color: #ffd2cd; }
+.solbar { position: absolute; right: 12px; top: 10px; display: flex; gap: 4px; }
+.solbar i { width: 18px; height: 6px; border-radius: 1px; background: rgba(255,255,255,.18); display: block; }
+.solbar i.done { background: var(--butter); }
+.solbar i.now { background: var(--rust); box-shadow: 0 0 0 1px rgba(255,255,255,.4); }
+
+/* Console grid */
+.console { display: grid; grid-template-columns: minmax(250px, 320px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 760px) { .console { grid-template-columns: 1fr; } .stage canvas { aspect-ratio: 16 / 9; } .brand { font-size: 21px; } }
+
+.gauges { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 13px; min-width: 0; }
+.gtitle { font-family: var(--f-display); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.gauge { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: baseline; position: relative; }
+.gauge .lbl { font-size: 13.5px; font-weight: 500; }
+.gauge .lbl small { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 4px; }
+.gauge .val { font-family: var(--f-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.bar { grid-column: 1 / -1; height: 8px; background: var(--panel-2); border-radius: 2px; overflow: hidden; position: relative; }
+.bar::after { content: ""; position: absolute; left: 20%; top: 0; bottom: 0; width: 1px; background: rgba(236,90,80,.55); }
+.fill { height: 100%; width: 50%; background: var(--c); transition: width .7s cubic-bezier(.2,.8,.2,1); border-radius: 2px; }
+.gauge.low .val { color: var(--bad); }
+.gauge.low .fill { animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+.delta { position: absolute; right: 52px; top: -2px; font-family: var(--f-mono); font-size: 12px; font-weight: 500; padding: 0 5px; border-radius: 2px; animation: rise 1.8s ease-out forwards; pointer-events: none; }
+.delta.up { color: #0f1a10; background: var(--ok); }
+.delta.down { color: #2a0c0a; background: var(--bad); }
+@keyframes rise { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+.science { border-top: 1px dashed var(--line); padding-top: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; position: relative; }
+.science .num { font-family: var(--f-display); font-size: 28px; font-weight: 700; color: var(--r-science); line-height: 1; font-variant-numeric: tabular-nums; }
+.legend { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.flags { display: flex; flex-wrap: wrap; gap: 6px; }
+.flag { font-family: var(--f-mono); font-size: 11px; border: 1px solid var(--line); color: var(--muted); padding: 2px 7px; border-radius: 3px; }
+.flag.on { color: var(--ink); border-color: var(--butter); }
+
+/* Decision card */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (max-width: 760px) { .card { padding: 18px 16px 20px; } }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--rust); }
+.card h2 { font-family: var(--f-display); font-weight: 600; font-size: 27px; line-height: 1.15; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+.story { margin: 0; max-width: 64ch; color: #e6d7cb; font-size: 15.5px; }
+.banner { border-left: 3px solid var(--sunset); background: rgba(140,187,224,.08); padding: 10px 14px; font-size: 14px; border-radius: 0 4px 4px 0; }
+.choices { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.choice { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 30px 1fr; gap: 4px 12px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2); transition: border-color .15s, background .15s, transform .15s; }
+.choice:hover { border-color: var(--butter); background: #33241f; }
+.choice:focus-visible { outline: 2px solid var(--sunset); outline-offset: 2px; }
+.choice:active { transform: translateY(1px); }
+.choice .key { grid-row: 1 / 3; font-family: var(--f-display); font-weight: 700; font-size: 15px; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 3px; color: var(--butter); }
+.choice .t { font-weight: 600; font-size: 15.5px; }
+.choice .d { font-size: 13.5px; color: var(--muted); }
+.tags { grid-column: 2; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.tag { font-family: var(--f-mono); font-size: 11.5px; padding: 1px 6px; border-radius: 2px; border: 1px solid; font-variant-numeric: tabular-nums; }
+.tag.up { color: var(--ok); border-color: rgba(134,201,143,.4); }
+.tag.down { color: #f19a92; border-color: rgba(236,90,80,.45); }
+.tag.note { color: var(--sunset); border-color: rgba(140,187,224,.4); }
+
+.fact { border: 1px solid rgba(227,180,122,.35); background: linear-gradient(180deg, rgba(227,180,122,.07), rgba(227,180,122,.02)); border-radius: 5px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.fact .ft { font-family: var(--f-display); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--butter); }
+.fact p { margin: 0; font-size: 14.5px; max-width: 66ch; }
+.fact .src { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.btn { all: unset; box-sizing: border-box; cursor: pointer; align-self: flex-start; font-family: var(--f-display); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 14px; padding: 11px 20px; background: var(--rust); color: #1b0c06; border-radius: 4px; transition: filter .15s, transform .15s; }
+.btn:hover { filter: brightness(1.12); }
+.btn:focus-visible { outline: 2px solid var(--sunset); outline-offset: 3px; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.report { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.report div { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 8px 12px; font-size: 14px; border-top: 1px solid var(--line); }
+.report div:first-child { border-top: 0; }
+.report .n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.report .n.up { color: var(--ok); } .report .n.down { color: #f19a92; }
+
+.crew { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.crew div { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; background: var(--panel-2); font-size: 13px; }
+.crew b { display: block; font-size: 14px; }
+.crew span { color: var(--muted); }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.stat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; }
+.stat .k { font-size: 12px; color: var(--muted); }
+.stat .v { font-family: var(--f-display); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rank { font-family: var(--f-display); font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--butter); }
+.log { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.log li { display: grid; grid-template-columns: 54px 1fr; gap: 10px; font-size: 14px; }
+.log li b { font-family: var(--f-mono); font-weight: 500; color: var(--rust); font-size: 12.5px; padding-top: 2px; }
+details.know { border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2); }
+details.know summary { cursor: pointer; padding: 10px 14px; font-weight: 600; }
+details.know summary:focus-visible { outline: 2px solid var(--sunset); }
+details.know .inner { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+details.know .inner p { margin: 0; font-size: 14px; }
+details.know .inner p b { color: var(--butter); font-weight: 600; }
+.h3 { font-family: var(--f-display); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 6px 0 0; }
+
+footer { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } .gauge.low .fill, .delta { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">Mission: <span>Red Base</span></div>
+    <div class="meta">
+      <div>Site <b>Jezero Crater, Mars</b></div>
+      <div>Gravity <b>0.38 g</b></div>
+      <div>Outside <b id="mTemp">−20 °C</b></div>
+      <div>Signal to Earth <b id="mDelay">12 min</b></div>
+    </div>
+  </header>
+
+  <section class="stage" aria-label="Live view of the Mars base">
+    <canvas id="scene" role="img" aria-label="A small habitat dome with solar panels on the red plain of Jezero Crater"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="solbar" id="solbar" aria-hidden="true"></div>
+  </section>
+
+  <section class="console">
+    <aside class="gauges" aria-label="Life support">
+      <div class="gtitle"><span>Life support</span><span>0–100</span></div>
+      <div id="gaugeList" style="display:flex;flex-direction:column;gap:13px"></div>
+      <div class="science" id="sciBox">
+        <div><div class="gtitle" style="display:block">Science points</div><div class="legend">Discoveries you send home</div></div>
+        <div class="num" id="sciNum">0</div>
+      </div>
+      <div class="flags" id="flags"></div>
+      <div class="legend">If any bar reaches 0, the crew must abort to the orbiting ship. The red tick marks the danger zone.</div>
+    </aside>
+
+    <article class="card" id="card" aria-live="polite"></article>
+  </section>
+
+  <footer>
+    <span>Prototype for the NASA Space Apps 2026 challenge “Build a Junior Astronaut Mission Trainer”. Not an official NASA product.</span>
+    <span>Facts drawn from NASA mission results: MOXIE, Curiosity RAD, Perseverance, Opportunity, ISS, Veggie.</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+// ---------- Data ----------
+const RES = [
+  { k: 'o2',     name: 'Oxygen',  unit: 'tank %',   c: 'var(--r-o2)' },
+  { k: 'water',  name: 'Water',   unit: 'reserve',  c: 'var(--r-water)' },
+  { k: 'food',   name: 'Food',    unit: 'rations',  c: 'var(--r-food)' },
+  { k: 'power',  name: 'Power',   unit: 'battery',  c: 'var(--r-power)' },
+  { k: 'health', name: 'Crew health', unit: '',     c: 'var(--r-health)' },
+];
+const LABEL = { o2: 'O₂', water: 'Water', food: 'Food', power: 'Power', health: 'Health', science: 'Science' };
+const FLAGS = { panels: 'Extra solar panels', greenhouse: 'Greenhouse', shield: 'Soil shield' };
+const DELAYS = [11, 11, 12, 12, 13, 13, 14]; // one-way light time in minutes, per sol
+
+const SOLS = [
+  {
+    title: 'Touchdown in Jezero Crater',
+    temp: '−22 °C',
+    story: 'Your lander settles on the floor of Jezero Crater, a dry lakebed where rivers flowed about 3.5 billion years ago. Four crew, seven sols, one small base. You have daylight for one big job before night. What do you build first?',
+    choices: [
+      { t: 'Unfold extra solar panels', d: 'More power every sol for the rest of the mission.', eff: () => ({ power: +4 }), note: '+5 power each night', set: { panels: true },
+        out: 'Two more panels click open and tilt toward the small, pale Sun. The batteries will charge faster from tonight on.' },
+      { t: 'Plant the greenhouse', d: 'Fresh food later, but plants need water now.', eff: () => ({ water: -8 }), note: '+4 food each night', set: { greenhouse: true },
+        out: 'Lucas sets up the growing tunnel and fills the trays. The seedlings drink a lot today, but in a few sols they will start feeding the crew.' },
+      { t: 'Cover the roof with Mars soil', d: 'Hard digging, but it shields the crew from radiation.', eff: () => ({ power: -6, health: -2 }), note: 'Blocks radiation later', set: { shield: true },
+        out: 'Kenji drives the small digger for hours and piles red soil over the sleeping quarters. Everyone is tired, but the roof is now a thick shield.' },
+    ],
+    fact: 'Mars gets only about 43% as much sunlight as Earth because it is about 1.5 times farther from the Sun. It has no global magnetic field and its air is about 1% as thick as ours, so space radiation reaches the ground. Soil can block it, and martian soil also contains toxic perchlorate salts, so plants are grown in washed soil or in water.',
+    src: 'NASA Mars facts · Curiosity Radiation Assessment Detector',
+  },
+  {
+    title: 'Oxygen from thin air',
+    temp: '−25 °C',
+    story: 'The air you breathe comes from tanks you brought from Earth, and the tanks are dropping. Outside, the air is 95% carbon dioxide. Your oxygen maker can split CO₂ to release oxygen, but it needs a lot of electricity.',
+    choices: [
+      { t: 'Run the oxygen maker at full power', d: 'Lots of oxygen, big power bill.', eff: () => ({ o2: +16, power: -14 }), fx: { moxie: 2 },
+        out: 'The machine hums all day and heats up to 800 °C inside. The oxygen tanks climb, and the battery drops.' },
+      { t: 'Run it at half power', d: 'A careful middle path.', eff: () => ({ o2: +8, power: -6 }), fx: { moxie: 1 },
+        out: 'You run it gently. A steady trickle of oxygen flows into the tanks while the battery stays healthy.' },
+      { t: 'Keep it off today', d: 'Save power and live on the tanks.', eff: () => ({}),
+        out: 'The battery stays full, but the crew is breathing from the tanks with nothing coming in. Sofia keeps one eye on the oxygen bar.' },
+    ],
+    fact: 'This machine is real. NASA’s MOXIE experiment on the Perseverance rover made oxygen from martian air 16 times between 2021 and 2023, 122 grams in all, at up to 12 grams per hour. One person breathes about 0.84 kg of oxygen a day, so a crewed base would need a much bigger version.',
+    src: 'NASA MOXIE, Perseverance rover · NASA life support design values',
+  },
+  {
+    title: 'The water recycler stopped',
+    temp: '−18 °C',
+    alarm: true,
+    story: 'BEEP. BEEP. BEEP. The water recycler has shut down. There is no tap on Mars. Every drop you drink, wash with and even breathe out as vapor has to be cleaned and used again.',
+    choices: [
+      { t: 'Fix it yourselves', d: 'Kenji knows the system, but it is a long, tiring repair.', eff: () => ({ water: +6, power: -4, health: -4 }),
+        out: 'Kenji finds a clogged filter after four hours on his back under the machine. Water flows again and the team cheers, quietly, because everyone is exhausted.' },
+      { t: 'Ask Mission Control for help', d: 'Engineers on Earth know every bolt, but the radio is slow.', eff: () => ({ water: -6 }), note: 'Answer arrives tomorrow', set: { askEarth: true }, fx: { comms: 1 },
+        out: 'Your message races to Earth at the speed of light and still takes 12 minutes. Engineers test a fix on a copy of your machine. Their answer will reach you overnight. Until then, the tank drains.' },
+      { t: 'Ration water until it is fixed', d: 'Save water, but thirsty crews get headaches.', eff: () => ({ water: +4, health: -10 }),
+        out: 'Everyone gets a small cup. By evening the crew is grumpy and Sofia reports headaches. You saved water, but bodies paid for it.' },
+    ],
+    fact: 'The International Space Station recycles about 98% of its water, including sweat and urine, back into clean drinking water. On Mars, help from Earth is slow: radio signals take between about 3 and 22 minutes each way, so one question and answer can take most of an hour.',
+    src: 'NASA ISS Environmental Control and Life Support System (2023)',
+  },
+  {
+    title: 'A dust storm rolls in',
+    temp: '−15 °C',
+    dust: 0.72,
+    story: 'The horizon has turned brown. A dust storm is sweeping across the crater and the sky is darkening at noon. Fine dust is settling on your solar panels and the power meter keeps falling.',
+    choices: [
+      { t: 'Go outside and brush the panels', d: 'Hard work in a spacesuit during a storm.', eff: () => ({ power: +10, health: -6 }), dust: 0.45, fx: { eva: 1 },
+        out: 'Amal and Kenji suit up and sweep the panels with long brushes while the wind pushes them sideways. Power comes back up, and both come inside coated in red.' },
+      { t: 'Shut down the science lab', d: 'Save every watt for heat and air.', eff: () => ({ power: +8 }),
+        out: 'The lab goes dark. The base is quiet and cold, but the batteries will last. No discoveries today.' },
+      { t: 'Keep everything running', d: 'The work continues, and so does the drain.', eff: () => ({ power: -8, science: +10 }),
+        out: 'The lab keeps analyzing rock samples and finds layers left by an ancient lake. The battery, though, sinks fast in the dim light.' },
+    ],
+    fact: 'Dust storms on Mars can grow until they cover the whole planet. In 2018 a planet-wide storm blocked sunlight for months, and the solar-powered rover Opportunity went silent after almost 15 years of exploring. Sometimes martian winds and dust devils also blew dust off rover panels, giving them surprise power boosts.',
+    src: 'NASA Mars Exploration Rover Opportunity',
+  },
+  {
+    title: 'Warning: solar storm',
+    temp: '−21 °C',
+    flare: true,
+    story: 'Urgent message from Earth: the Sun has blasted out a cloud of fast particles headed for Mars. Because of the radio delay, this warning took 13 minutes to reach you. Amal and Lucas are outside collecting rock samples.',
+    choices: [
+      { t: 'Everyone inside, right now', d: 'Leave the samples. Safety first.', eff: (S) => ({ health: S.flags.shield ? -2 : -8 }), fx: {},
+        out: 'The two explorers drop their tools and hurry through the airlock. The crew waits out the storm in the middle of the habitat.' },
+      { t: 'Finish collecting the samples', d: 'Ten more minutes outside could mean big science.', eff: (S) => ({ health: S.flags.shield ? -8 : -16, science: +15 }), fx: { eva: 1 },
+        out: 'They grab the last samples and sprint back. The dosimeters on their suits show a big jump. The rocks are amazing, but there is a cost.' },
+      { t: 'Shelter behind the water tanks', d: 'Move water bags around the bunks to make a wall.', eff: () => ({ water: -6, health: -2 }),
+        out: 'Everyone stacks water bags around the bunks. A few bags leak during the rush, but the wall works and the crew sleeps in a safe little cave.' },
+    ],
+    fact: 'Water is one of the best radiation shields because it is full of hydrogen, which slows down fast particles. On NASA’s Orion spacecraft, Artemis astronauts can build a storm shelter out of stowed supplies. On the surface of Mars, NASA’s Curiosity rover measured about 0.7 millisieverts of radiation a day, many times more than on Earth.',
+    src: 'NASA Orion / Artemis · Curiosity RAD',
+  },
+  {
+    title: 'The leopard-spot rock',
+    temp: '−19 °C',
+    story: 'Your rover’s camera spots a reddish rock 2 km away, covered in tiny pale spots with dark rims, like a leopard. On Earth, patterns like these can form when microbes are involved. Could this be a sign of ancient life?',
+    choices: [
+      { t: 'Drive the rover out to sample it', d: 'The best science, but the trip drains the battery.', eff: () => ({ power: -12, science: +30 }), fx: { rover: 1 },
+        out: 'The rover crawls out, drills a core and brings it home. Under the microscope the spots look like nothing you have seen before. Earth will be thrilled.' },
+      { t: 'Send the helicopter drone to photograph it', d: 'Fast and cheap, but only pictures.', eff: () => ({ power: -5, science: +15 }), fx: { drone: 1 },
+        out: 'The little drone spins up its blades and flies over the rock. The close-up photos are sharp enough to plan a sample trip for the next crew.' },
+      { t: 'Mark it on the map for the next crew', d: 'Save power for the trip home.', eff: () => ({ science: +3 }),
+        out: 'You add a pin to the map with a note: “Look here first.” Some discoveries are a gift to the people who come after you.' },
+    ],
+    fact: 'In 2024 the Perseverance rover found a rock nicknamed “Cheyava Falls” with leopard spots. In 2025 NASA said a sample from it holds the clearest potential sign of ancient life found on Mars so far, though it is not proof. Perseverance’s helper, the Ingenuity helicopter, made 72 flights in air about 1% as thick as Earth’s.',
+    src: 'NASA Perseverance rover · Ingenuity Mars Helicopter',
+  },
+  {
+    title: 'The last sol',
+    temp: '−17 °C',
+    story: 'Tomorrow the crew launches back to orbit. Amal says her legs ache and she feels weak. In Mars gravity, only 38% of Earth’s, muscles and bones work less and start to weaken. How do you spend the final sol?',
+    choices: [
+      { t: 'Two hours of exercise for everyone', d: 'Treadmill and resistance training.', eff: () => ({ health: +12, power: -3 }),
+        out: 'The treadmill thumps all morning. Muscles burn, faces turn red, and by evening Amal says she feels strong enough for the launch.' },
+      { t: 'One last science push', d: 'Squeeze in every experiment you can.', eff: () => ({ science: +15, health: -8 }),
+        out: 'The crew works late, packs every sample and logs every reading. They are exhausted, but the science haul is huge.' },
+      { t: 'Record video messages for home', d: 'No live calls from Mars, but messages lift spirits.', eff: () => ({ health: +6 }), fx: { comms: 1 },
+        out: 'Everyone records a message for family. A live video call is impossible with a 14-minute delay each way, but the messages will arrive while the crew sleeps. Spirits lift.' },
+    ],
+    fact: 'Without exercise, astronauts in weightlessness can lose about 1 to 1.5% of the bone mass in their hips and spine each month. That is why astronauts on the ISS exercise about two hours every day. Mars gravity helps a little, but crews will still need daily workouts.',
+    src: 'NASA Human Research Program',
+  },
+];
+
+// ---------- State ----------
+const fresh = () => ({
+  phase: 'intro', sol: 0, res: { o2: 55, water: 55, food: 50, power: 50, health: 80 }, science: 0,
+  flags: { panels: false, greenhouse: false, shield: false, askEarth: false },
+  dust: 0, last: null, night: null, decisions: [], abort: null, banner: null,
+});
+let S = fresh();
+
+// ---------- Helpers ----------
+const $ = (id) => document.getElementById(id);
+const clamp = (v) => Math.max(0, Math.min(100, v));
+const fmt = (n) => (n > 0 ? '+' : '−') + Math.abs(n);
+function tagsFor(eff) {
+  return Object.entries(eff).filter(([, v]) => v).map(([k, v]) =>
+    `<span class="tag ${v > 0 ? 'up' : 'down'}">${LABEL[k]} ${fmt(v)}</span>`).join('');
+}
+function apply(eff) {
+  const deltas = {};
+  for (const [k, v] of Object.entries(eff)) {
+    if (!v) continue;
+    if (k === 'science') { S.science = Math.max(0, S.science + v); deltas.science = v; }
+    else { const before = S.res[k]; S.res[k] = clamp(before + v); deltas[k] = S.res[k] - before; }
+  }
+  return deltas;
+}
+function failed() { return RES.find((r) => S.res[r.k] <= 0); }
+
+// ---------- Gauges ----------
+function buildGauges() {
+  $('gaugeList').innerHTML = RES.map((r) => `
+    <div class="gauge" id="g-${r.k}" style="--c:${r.c}">
+      <div class="lbl">${r.name}${r.unit ? `<small>${r.unit}</small>` : ''}</div>
+      <div class="val" id="v-${r.k}">0</div>
+      <div class="bar"><div class="fill" id="f-${r.k}"></div></div>
+    </div>`).join('');
+}
+function renderGauges(deltas = {}) {
+  for (const r of RES) {
+    const v = S.res[r.k];
+    $('v-' + r.k).textContent = v;
+    $('f-' + r.k).style.width = v + '%';
+    $('g-' + r.k).classList.toggle('low', v < 20);
+    if (deltas[r.k]) popDelta($('g-' + r.k), deltas[r.k]);
+  }
+  $('sciNum').textContent = S.science;
+  if (deltas.science) popDelta($('sciBox'), deltas.science);
+  $('flags').innerHTML = Object.entries(FLAGS).map(([k, n]) => `<span class="flag ${S.flags[k] ? 'on' : ''}">${S.flags[k] ? '■' : '□'} ${n}</span>`).join('');
+}
+function popDelta(host, v) {
+  const el = document.createElement('span');
+  el.className = 'delta ' + (v > 0 ? 'up' : 'down');
+  el.textContent = fmt(v);
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 1900);
+}
+function renderTop() {
+  const ev = SOLS[Math.min(S.sol, 6)];
+  $('mTemp').textContent = S.phase === 'night' ? '−78 °C' : ev.temp;
+  $('mDelay').textContent = DELAYS[Math.min(S.sol, 6)] + ' min';
+  const chips = [];
+  if (S.phase === 'intro') chips.push('<span class="hud-chip">Approach · Jezero Crater</span>');
+  else if (S.phase === 'end') chips.push(`<span class="hud-chip">${S.abort ? 'Mission aborted' : 'Launch to orbit'}</span>`);
+  else chips.push(`<span class="hud-chip">Sol ${S.sol + 1} of 7 · ${S.phase === 'night' ? 'Night' : 'Day'}</span>`);
+  if (scene.alarm) chips.push('<span class="hud-chip alert">Water recycler fault</span>');
+  if (scene.flare) chips.push('<span class="hud-chip alert">Radiation alert</span>');
+  if (S.dust > 0.3 && S.phase !== 'end') chips.push(`<span class="hud-chip">Dust · solar at ${Math.round((1 - S.dust) * 100)}%</span>`);
+  $('hud').innerHTML = chips.join('');
+  $('solbar').innerHTML = Array.from({ length: 7 }, (_, i) =>
+    `<i class="${S.phase === 'intro' ? '' : i < S.sol || S.phase === 'end' ? 'done' : i === S.sol ? 'now' : ''}"></i>`).join('');
+}
+
+// ---------- Card screens ----------
+function render() {
+  renderTop();
+  const c = $('card');
+  if (S.phase === 'intro') {
+    c.innerHTML = `
+      <div class="eyebrow">Mission briefing</div>
+      <h2>You are the commander of the first base on Mars</h2>
+      <p class="story">For seven sols (a Mars day lasts 24 hours and 39 minutes) you will keep four crew members alive in a small habitat. Every sol brings a problem. Every choice gives you something and costs you something, exactly the way real mission planners at NASA have to think.</p>
+      <div class="crew">
+        <div><b>Amal</b><span>Geologist</span></div>
+        <div><b>Kenji</b><span>Engineer</span></div>
+        <div><b>Sofia</b><span>Doctor</span></div>
+        <div><b>Lucas</b><span>Botanist</span></div>
+      </div>
+      <p class="story" style="font-size:14.5px">Each night the crew uses up oxygen, water and food, and the base needs power to stay warm when it drops below −70 °C. Keep every bar above zero and bring home as much science as you can.</p>
+      <div class="row"><button class="btn" id="go">Begin sol 1</button></div>`;
+    $('go').onclick = () => { S.phase = 'event'; setDay(); render(); };
+    return;
+  }
+  if (S.phase === 'event') {
+    const ev = SOLS[S.sol];
+    c.innerHTML = `
+      <div class="eyebrow">Sol ${S.sol + 1} · Decision</div>
+      <h2>${ev.title}</h2>
+      ${S.banner ? `<div class="banner">${S.banner}</div>` : ''}
+      <p class="story">${ev.story}</p>
+      <div class="choices">${ev.choices.map((ch, i) => `
+        <button class="choice" data-i="${i}">
+          <span class="key">${'ABC'[i]}</span>
+          <span class="t">${ch.t}</span>
+          <span class="d">${ch.d}</span>
+          <span class="tags">${tagsFor(ch.eff(S))}${ch.note ? `<span class="tag note">${ch.note}</span>` : ''}</span>
+        </button>`).join('')}
+      </div>`;
+    c.querySelectorAll('.choice').forEach((b) => (b.onclick = () => choose(+b.dataset.i)));
+    return;
+  }
+  if (S.phase === 'outcome') {
+    const ev = SOLS[S.sol], ch = ev.choices[S.last];
+    c.innerHTML = `
+      <div class="eyebrow">Sol ${S.sol + 1} · What happened</div>
+      <h2>${ch.t}</h2>
+      <p class="story">${ch.out}</p>
+      <div class="fact"><div class="ft">Science file</div><p>${ev.fact}</p><div class="src">Source: ${ev.src}</div></div>
+      <div class="row"><button class="btn" id="go">${S.abort ? 'See mission report' : 'End sol ' + (S.sol + 1)}</button></div>`;
+    $('go').onclick = () => (S.abort ? finish() : nightfall());
+    return;
+  }
+  if (S.phase === 'night') {
+    const n = S.night;
+    c.innerHTML = `
+      <div class="eyebrow">Sol ${S.sol + 1} · Night report</div>
+      <h2>The Sun sets blue over Jezero</h2>
+      <p class="story">On Mars, sunsets glow blue because fine dust scatters blue light forward, toward your eyes. Overnight the crew sleeps, breathes and eats, and the heaters fight the cold.</p>
+      <div class="report">${n.map((r) => `<div><span>${r.what}</span><span class="n ${r.v > 0 ? 'up' : r.v < 0 ? 'down' : ''}">${r.v === 0 ? '0' : fmt(r.v)} ${LABEL[r.k]}</span></div>`).join('')}</div>
+      <div class="row"><button class="btn" id="go">${S.abort ? 'See mission report' : S.sol === 6 ? 'Launch to orbit' : 'Wake up for sol ' + (S.sol + 2)}</button></div>`;
+    $('go').onclick = () => {
+      if (S.abort || S.sol === 6) return finish();
+      S.sol++; S.phase = 'event'; S.banner = null;
+      const ev = SOLS[S.sol];
+      if (ev.dust) S.dust = Math.max(S.dust, ev.dust);
+      if (S.flags.askEarth) {
+        S.flags.askEarth = false;
+        const d = apply({ water: +12, science: +5 });
+        S.banner = 'Mission Control replied overnight. Their fix makes the recycler run better than before, and the engineers sent a thank-you for the data. ' + tagsFor(d);
+        renderGauges(d);
+      }
+      setDay(); render();
+    };
+    return;
+  }
+  if (S.phase === 'end') {
+    const survived = !S.abort;
+    const total = S.science + (survived ? Math.round(Object.values(S.res).reduce((a, b) => a + b, 0) / 5) : 0);
+    const rank = !survived ? 'Cadet · try again' : S.science >= 50 ? 'Flight Commander' : S.science >= 25 ? 'Mission Specialist' : 'Base Keeper';
+    c.innerHTML = `
+      <div class="eyebrow">Mission report</div>
+      <h2>${survived ? 'All four crew are safe in orbit' : `Mission aborted on sol ${S.sol + 1}`}</h2>
+      ${survived
+        ? `<p class="story">Your ascent vehicle lifts off and the base shrinks to a dot on the red plain. You kept a crew alive on another planet for seven sols.</p>`
+        : `<p class="story">${S.abort.name} ran out, so the crew had to leave for the orbiting ship early. Real missions plan for this with reserves and backup systems. Look at which choices drained ${S.abort.name.toLowerCase()} and try a different path.</p>`}
+      <div class="rank">Rank: ${rank}</div>
+      <div class="stats">
+        <div class="stat"><div class="k">Science</div><div class="v">${S.science}</div></div>
+        ${RES.map((r) => `<div class="stat"><div class="k">${r.name}</div><div class="v">${S.res[r.k]}</div></div>`).join('')}
+        <div class="stat"><div class="k">Mission score</div><div class="v">${total}</div></div>
+      </div>
+      <div class="h3">Your decisions</div>
+      <ol class="log">${S.decisions.map((d) => `<li><b>Sol ${d.sol}</b><span>${d.t}</span></li>`).join('')}</ol>
+      <details class="know" open>
+        <summary>What you learned on Mars (${S.decisions.length} science files)</summary>
+        <div class="inner">${S.decisions.map((d) => `<p><b>${SOLS[d.sol - 1].title}.</b> ${SOLS[d.sol - 1].fact}</p>`).join('')}</div>
+      </details>
+      <p class="story" style="font-size:14.5px">On Mars nothing is free. Power, air, water, food, health and discovery all pull against each other, and every gram you carry from Earth is expensive. Choosing which trade-off to make is the real job of a mission team.</p>
+      <div class="row"><button class="btn" id="again">Fly again</button></div>`;
+    $('again').onclick = () => { S = fresh(); Object.assign(scene, sceneDefaults()); buildGauges(); renderGauges(); render(); };
+  }
+}
+
+function choose(i) {
+  const ev = SOLS[S.sol], ch = ev.choices[i];
+  S.last = i;
+  S.decisions.push({ sol: S.sol + 1, t: ch.t });
+  if (ch.set) Object.assign(S.flags, ch.set);
+  if (ch.dust !== undefined) S.dust = ch.dust;
+  const d = apply(ch.eff(S));
+  scene.moxie = ch.fx?.moxie || 0;
+  scene.rover = ch.fx?.rover ? 1 : 0; scene.roverT = 0;
+  scene.drone = ch.fx?.drone ? 1 : 0;
+  scene.eva = ch.fx?.eva ? 1 : 0;
+  if (ch.fx?.comms) scene.comms = 1;
+  scene.alarm = false;
+  const f = failed(); if (f) S.abort = f;
+  S.phase = 'outcome';
+  renderGauges(d); render();
+}
+
+function nightfall() {
+  const panels = S.flags.panels ? 5 : 0;
+  const solar = Math.round(14 * (1 - S.dust)) + panels;
+  const rows = [
+    { what: 'Crew breathed through the night', k: 'o2', v: -7 },
+    { what: 'Drinking, cooking and washing', k: 'water', v: -5 },
+    { what: 'Four crew meals', k: 'food', v: -6 },
+  ];
+  if (S.flags.greenhouse && S.sol >= 1) rows.push({ what: 'Greenhouse harvest', k: 'food', v: +4 });
+  rows.push({ what: `Solar charge today${S.dust > 0.3 ? ' (dusty sky)' : ''}${panels ? ', extra panels' : ''}`, k: 'power', v: solar });
+  rows.push({ what: 'Heaters and life support', k: 'power', v: -14 });
+  const total = {};
+  rows.forEach((r) => (total[r.k] = (total[r.k] || 0) + r.v));
+  const d = apply(total);
+  if (S.res.power < 15) { const h = apply({ health: -5 }); d.health = (d.health || 0) + (h.health || 0); rows.push({ what: 'Low power: heaters ran weak in −78 °C cold', k: 'health', v: -5 }); }
+  if (S.res.food < 12) { const h = apply({ health: -3 }); d.health = (d.health || 0) + (h.health || 0); rows.push({ what: 'Hungry crew', k: 'health', v: -3 }); }
+  // the storm eases after sol 5
+  if (S.sol >= 4) S.dust = Math.max(0, S.dust - 0.35);
+  S.night = rows;
+  const f = failed(); if (f) S.abort = f;
+  S.phase = 'night';
+  scene.target = 1; scene.flare = false; scene.eva = 0; scene.drone = 0; scene.moxie = 0; scene.rover = 0;
+  renderGauges(d); render();
+}
+
+function finish() { S.phase = 'end'; scene.target = 0.15; scene.launch = S.abort ? 0 : 1; scene.launchT = 0; render(); }
+
+function setDay() {
+  const ev = SOLS[S.sol];
+  scene.target = 0;
+  scene.alarm = !!ev.alarm;
+  scene.flare = !!ev.flare;
+  scene.eva = ev.flare ? 1 : 0;
+}
+
+// ---------- Scene ----------
+const cv = $('scene'), ctx = cv.getContext('2d');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const ridgeFar = Array.from({ length: 61 }, (_, i) => 0.46 + Math.sin(i * 0.21) * 0.025 + rnd() * 0.03);
+const ridgeNear = Array.from({ length: 41 }, (_, i) => 0.58 + Math.sin(i * 0.37 + 1) * 0.03 + rnd() * 0.035);
+const rocks = Array.from({ length: 46 }, () => ({ x: rnd(), y: 0.74 + rnd() * 0.25, r: 0.003 + rnd() * 0.012 }));
+const stars = Array.from({ length: 140 }, () => ({ x: rnd(), y: rnd() * 0.6, s: rnd() }));
+const dustP = Array.from({ length: 160 }, () => ({ x: rnd(), y: rnd(), v: 0.5 + rnd(), l: 0.01 + rnd() * 0.03 }));
+const radP = Array.from({ length: 40 }, () => ({ x: rnd(), y: rnd(), v: 0.6 + rnd() }));
+const sceneDefaults = () => ({ tod: 0.15, target: 0.15, alarm: false, flare: false, moxie: 0, rover: 0, roverT: 0, drone: 0, eva: 0, comms: 0, launch: 0, launchT: 0 });
+const scene = sceneDefaults();
+
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const SKY = {
+  day:   { top: [176, 129, 92], bot: [228, 186, 140] },
+  dusk:  { top: [52, 42, 58],   bot: [120, 160, 196] },
+  night: { top: [6, 6, 12],     bot: [24, 17, 20] },
+  dust:  { top: [120, 78, 46],  bot: [164, 110, 66] },
+};
+function skyAt(tod, dust) {
+  let top, bot;
+  if (tod < 0.5) { const t = tod / 0.5; top = mix(SKY.day.top, SKY.dusk.top, t); bot = mix(SKY.day.bot, SKY.dusk.bot, t); }
+  else { const t = (tod - 0.5) / 0.5; top = mix(SKY.dusk.top, SKY.night.top, t); bot = mix(SKY.dusk.bot, SKY.night.bot, t); }
+  const dk = dust * (1 - Math.max(0, tod - 0.4));
+  return { top: mix(top, SKY.dust.top, dk * 0.8), bot: mix(bot, SKY.dust.bot, dk * 0.8) };
+}
+
+let W = 0, H = 0, last = 0;
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = cv.clientWidth; H = cv.clientHeight;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+new ResizeObserver(resize).observe(cv);
+
+function frame(ts) {
+  const dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts;
+  scene.tod += (scene.target - scene.tod) * Math.min(1, dt * (reduce ? 20 : 1.1));
+  if (scene.comms > 0) scene.comms = Math.max(0, scene.comms - dt * 0.18);
+  if (scene.rover) scene.roverT = Math.min(1, scene.roverT + dt * 0.12);
+  if (scene.launch) scene.launchT = Math.min(1, scene.launchT + dt * 0.2);
+  draw(ts / 1000, dt);
+  requestAnimationFrame(frame);
+}
+
+function draw(t, dt) {
+  if (!W) resize();
+  const tod = scene.tod, dust = S.dust, night = Math.max(0, (tod - 0.55) / 0.45);
+  const g0 = H * 0.7;
+  // sky
+  const sky = skyAt(tod, dust);
+  let g = ctx.createLinearGradient(0, 0, 0, g0);
+  g.addColorStop(0, rgb(sky.top)); g.addColorStop(1, rgb(sky.bot));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // stars + Earth
+  if (night > 0) {
+    for (const s of stars) { ctx.fillStyle = `rgba(255,245,235,${night * (0.35 + s.s * 0.65) * (0.8 + 0.2 * Math.sin(t * 2 + s.x * 40))})`; ctx.fillRect(s.x * W, s.y * g0, s.s > 0.85 ? 2 : 1.2, s.s > 0.85 ? 2 : 1.2); }
+    const ex = W * 0.18, ey = H * 0.26;
+    ctx.fillStyle = `rgba(150,200,255,${night})`; ctx.beginPath(); ctx.arc(ex, ey, 2.6, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(150,200,255,${night * 0.25})`; ctx.beginPath(); ctx.arc(ex, ey, 7, 0, 7); ctx.fill();
+    ctx.font = '500 11px "IBM Plex Mono", monospace'; ctx.fillStyle = `rgba(220,235,255,${night * 0.85})`; ctx.fillText('Earth', ex + 10, ey + 4);
+  }
+  // sun (setting) with blue halo at dusk
+  const sx = W * 0.74, sy = H * 0.16 + Math.min(tod, 0.7) / 0.7 * (g0 - H * 0.12);
+  const sunA = Math.max(0, 1 - tod * 1.6) * (1 - dust * 0.65);
+  const dusk = Math.max(0, 1 - Math.abs(tod - 0.42) / 0.25);
+  if (dusk > 0) { const hg = ctx.createRadialGradient(sx, sy, 0, sx, sy, W * 0.16); hg.addColorStop(0, `rgba(170,210,245,${0.55 * dusk})`); hg.addColorStop(1, 'rgba(170,210,245,0)'); ctx.fillStyle = hg; ctx.fillRect(0, 0, W, g0); }
+  if (sunA > 0.02) { ctx.fillStyle = `rgba(255,248,232,${sunA})`; ctx.beginPath(); ctx.arc(sx, sy, Math.max(5, W * 0.011), 0, 7); ctx.fill(); }
+  // ridges (crater rim)
+  const lit = 1 - night * 0.8;
+  ridge(ridgeFar, mix([150, 92, 62], [120, 80, 64], dust), lit * 0.85, H);
+  ridge(ridgeNear, mix([128, 70, 42], [110, 70, 50], dust), lit * 0.75, H);
+  // ground
+  g = ctx.createLinearGradient(0, g0 - 10, 0, H);
+  g.addColorStop(0, rgb(mix([170, 88, 48], [40, 22, 18], night))); g.addColorStop(1, rgb(mix([112, 52, 28], [22, 12, 10], night)));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, g0);
+  for (let i = 0; i <= 20; i++) ctx.lineTo(W * i / 20, g0 + Math.sin(i * 1.3) * 3);
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill();
+  for (const r of rocks) { ctx.fillStyle = rgb(mix([88, 40, 24], [20, 10, 8], night), 0.85); ctx.beginPath(); ctx.ellipse(r.x * W, r.y * H, r.r * W, r.r * W * 0.55, 0, 0, 7); ctx.fill(); }
+
+  const base = g0 + H * 0.12;
+  greenhouse(W * 0.15, base, night, t);
+  panels(W * 0.6, base, night, dust);
+  habitat(W * 0.37, base, night, t);
+  moxie(W * 0.48, base, night, t);
+  antenna(W * 0.27, base, night, t);
+  rover(base, night);
+  if (scene.eva) { astronaut(W * 0.53, base + 6, t, 0); astronaut(W * 0.57, base + 10, t, 1.5); }
+  if (scene.drone) drone(W * 0.8, H * 0.38 + Math.sin(t * 2) * 6, t);
+  if (scene.launch) launch();
+
+  // dust storm particles
+  if (dust > 0.25) {
+    ctx.fillStyle = `rgba(150,96,56,${dust * 0.32})`; ctx.fillRect(0, 0, W, H);
+    if (!reduce) { ctx.strokeStyle = `rgba(214,160,110,${dust * 0.5})`; ctx.lineWidth = 1;
+      for (const p of dustP) { p.x += dt * p.v * 0.35 * dust; if (p.x > 1.05) p.x = -0.05; ctx.beginPath(); ctx.moveTo(p.x * W, p.y * H); ctx.lineTo((p.x - p.l) * W, p.y * H + 2); ctx.stroke(); } }
+  }
+  // radiation
+  if (scene.flare) {
+    const f = 0.08 + 0.06 * Math.sin(t * 6);
+    ctx.fillStyle = `rgba(190,150,255,${f})`; ctx.fillRect(0, 0, W, H);
+    if (!reduce) { ctx.strokeStyle = 'rgba(225,205,255,.55)';
+      for (const p of radP) { p.y += dt * p.v * 0.9; p.x += dt * p.v * 0.35; if (p.y > 1) { p.y = 0; p.x = rnd() * 0.8; } ctx.beginPath(); ctx.moveTo(p.x * W, p.y * H); ctx.lineTo(p.x * W - 10, p.y * H - 26); ctx.stroke(); } }
+  }
+}
+function ridge(arr, col, lit, H) {
+  ctx.fillStyle = rgb(col.map((v) => v * lit)); ctx.beginPath(); ctx.moveTo(0, H);
+  arr.forEach((v, i) => ctx.lineTo(W * i / (arr.length - 1), v * H)); ctx.lineTo(W, H); ctx.fill();
+}
+function habitat(x, y, night, t) {
+  const r = Math.min(W * 0.085, 110), h = r * 0.95;
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(x + 8, y + 4, r * 1.25, 8, 0, 0, 7); ctx.fill();
+  // tunnel to airlock
+  ctx.fillStyle = rgb(mix([214, 206, 196], [70, 66, 70], night)); ctx.fillRect(x + r * 0.8, y - r * 0.32, r * 0.55, r * 0.32);
+  ctx.beginPath(); ctx.arc(x + r * 1.42, y - r * 0.18, r * 0.24, Math.PI, 0); ctx.lineTo(x + r * 1.66, y); ctx.lineTo(x + r * 1.18, y); ctx.fill();
+  // dome
+  const dg = ctx.createLinearGradient(x - r, y - h, x + r, y);
+  dg.addColorStop(0, rgb(mix([240, 234, 226], [92, 88, 96], night))); dg.addColorStop(1, rgb(mix([178, 168, 160], [48, 44, 52], night)));
+  ctx.fillStyle = dg; ctx.beginPath(); ctx.ellipse(x, y, r, h, 0, Math.PI, 0); ctx.fill();
+  // ribs
+  ctx.strokeStyle = rgb(mix([150, 140, 134], [40, 36, 42], night), 0.7); ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.ellipse(x, y, r * i / 4, h, 0, Math.PI, 0); ctx.stroke(); }
+  // soil shield
+  if (S.flags.shield) {
+    ctx.strokeStyle = rgb(mix([150, 74, 40], [52, 26, 18], night)); ctx.lineWidth = r * 0.16;
+    ctx.beginPath(); ctx.ellipse(x, y, r * 0.98, h * 0.98, 0, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
+    ctx.fillStyle = rgb(mix([120, 58, 32], [40, 20, 14], night));
+    for (let i = 0; i < 9; i++) { const a = Math.PI * (1.15 + i * 0.08); ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * 1.0, y + Math.sin(a) * h * 1.0, r * 0.05, 0, 7); ctx.fill(); }
+  }
+  // windows
+  const glow = 0.25 + night * 0.75;
+  for (const [dx, dy] of [[-0.45, -0.32], [0, -0.38], [0.45, -0.32]]) {
+    ctx.fillStyle = `rgba(255,214,140,${glow})`; ctx.beginPath(); ctx.arc(x + dx * r, y + dy * h, r * 0.075, 0, 7); ctx.fill();
+    if (night > 0.2) { ctx.fillStyle = `rgba(255,200,120,${night * 0.15})`; ctx.beginPath(); ctx.arc(x + dx * r, y + dy * h, r * 0.22, 0, 7); ctx.fill(); }
+  }
+  // alarm beacon
+  const bx = x, by = y - h - 6;
+  ctx.fillStyle = '#555'; ctx.fillRect(bx - 1, by, 2, 7);
+  const on = scene.alarm && Math.sin(t * 8) > 0;
+  ctx.fillStyle = on ? '#ff3b30' : scene.alarm ? '#7a1a16' : rgb(mix([120, 200, 140], [60, 160, 90], night));
+  ctx.beginPath(); ctx.arc(bx, by, 3.5, 0, 7); ctx.fill();
+  if (on) { ctx.fillStyle = 'rgba(255,60,48,.25)'; ctx.beginPath(); ctx.arc(bx, by, 16, 0, 7); ctx.fill(); }
+}
+function panels(x, y, night, dust) {
+  const n = S.flags.panels ? 5 : 3, w = Math.min(W * 0.045, 56), hgt = w * 0.55;
+  for (let i = 0; i < n; i++) {
+    const px = x + i * w * 1.18, py = y - hgt - 6;
+    ctx.fillStyle = rgb(mix([90, 90, 96], [30, 30, 34], night)); ctx.fillRect(px + w * 0.45, py + hgt * 0.5, 2, hgt * 0.5 + 6);
+    const c = mix(mix([34, 62, 104], [120, 78, 48], dust * 0.85), [14, 18, 28], night);
+    ctx.fillStyle = rgb(c); ctx.beginPath(); ctx.moveTo(px, py + hgt * 0.25); ctx.lineTo(px + w, py); ctx.lineTo(px + w, py + hgt * 0.75); ctx.lineTo(px, py + hgt); ctx.fill();
+    ctx.strokeStyle = `rgba(160,190,230,${0.35 * (1 - night) * (1 - dust)})`; ctx.lineWidth = 0.7;
+    for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(px + w * k / 4, py + hgt * 0.25 * (1 - k / 4)); ctx.lineTo(px + w * k / 4, py + hgt - hgt * 0.25 * (k / 4)); ctx.stroke(); }
+  }
+}
+function greenhouse(x, y, night, t) {
+  const w = Math.min(W * 0.1, 120), h = w * 0.42;
+  ctx.fillStyle = S.flags.greenhouse ? `rgba(210,240,230,${0.28 + night * 0.1})` : 'rgba(200,190,180,.18)';
+  ctx.strokeStyle = S.flags.greenhouse ? 'rgba(230,250,240,.6)' : 'rgba(220,200,190,.3)';
+  ctx.beginPath(); ctx.ellipse(x, y, w / 2, h, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+  if (!S.flags.greenhouse) { ctx.font = '500 10px "IBM Plex Mono", monospace'; ctx.fillStyle = `rgba(255,240,230,${0.55 - night * 0.3})`; ctx.textAlign = 'center'; ctx.fillText('empty', x, y - h * 0.35); ctx.textAlign = 'left'; return; }
+  const glow = night * 0.5;
+  if (glow) { ctx.fillStyle = `rgba(255,120,220,${glow * 0.35})`; ctx.beginPath(); ctx.ellipse(x, y, w / 2, h, 0, Math.PI, 0); ctx.fill(); }
+  for (let i = 0; i < 9; i++) { const px = x - w * 0.38 + i * w * 0.095, ph = h * (0.25 + 0.15 * Math.sin(i * 1.7) + Math.min(0.25, S.sol * 0.04));
+    ctx.strokeStyle = '#5fae4c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, y - 2); ctx.lineTo(px + Math.sin(t + i) * 1, y - ph); ctx.stroke();
+    ctx.fillStyle = '#7fd062'; ctx.beginPath(); ctx.ellipse(px, y - ph, 3.2, 2.2, 0.4, 0, 7); ctx.fill(); }
+}
+function moxie(x, y, night, t) {
+  const s = Math.min(W * 0.022, 26);
+  ctx.fillStyle = rgb(mix([200, 170, 90], [70, 60, 40], night)); ctx.fillRect(x, y - s, s, s);
+  ctx.fillStyle = rgb(mix([120, 100, 60], [40, 34, 24], night)); ctx.fillRect(x + s * 0.2, y - s * 0.75, s * 0.6, s * 0.15);
+  if (scene.moxie && !reduce) for (let i = 0; i < 4 * scene.moxie; i++) {
+    const ph = (t * 0.5 + i / (4 * scene.moxie)) % 1;
+    ctx.fillStyle = `rgba(190,230,255,${0.5 * (1 - ph)})`; ctx.beginPath(); ctx.arc(x + s * 0.5 + Math.sin(ph * 6 + i) * 4, y - s - ph * 40, 2 + ph * 5, 0, 7); ctx.fill();
+  }
+}
+function antenna(x, y, night, t) {
+  const h = Math.min(H * 0.22, 80);
+  ctx.strokeStyle = rgb(mix([190, 186, 180], [70, 68, 70], night)); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h); ctx.stroke();
+  ctx.fillStyle = rgb(mix([226, 222, 216], [80, 78, 82], night));
+  ctx.beginPath(); ctx.ellipse(x, y - h, 13, 6, -0.6, 0, 7); ctx.fill();
+  if (scene.comms > 0 && !reduce) for (let i = 0; i < 3; i++) {
+    const ph = (t * 0.6 + i / 3) % 1;
+    ctx.strokeStyle = `rgba(150,200,255,${(1 - ph) * scene.comms})`; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x - 6, y - h - 4, 8 + ph * 60, -2.6, -1.6); ctx.stroke();
+  }
+}
+function rover(y, night) {
+  const k = scene.rover ? Math.sin(scene.roverT * Math.PI) : 0;
+  const x = W * (0.86 + k * 0.1), s = Math.min(W * 0.03, 34);
+  ctx.fillStyle = rgb(mix([230, 226, 218], [80, 78, 80], night)); ctx.fillRect(x - s, y - s * 0.9, s * 2, s * 0.45);
+  ctx.fillRect(x + s * 0.5, y - s * 1.45, 3, s * 0.6); ctx.fillRect(x + s * 0.35, y - s * 1.55, s * 0.4, s * 0.18);
+  ctx.fillStyle = '#2b2422'; for (const dx of [-0.8, 0, 0.8]) { ctx.beginPath(); ctx.arc(x + dx * s, y - s * 0.3, s * 0.24, 0, 7); ctx.fill(); }
+  if (night > 0.3) { ctx.fillStyle = `rgba(255,240,200,${night * 0.25})`; ctx.beginPath(); ctx.moveTo(x - s, y - s * 0.7); ctx.lineTo(x - s * 4, y - s * 0.2); ctx.lineTo(x - s * 4, y + s * 0.2); ctx.fill(); }
+}
+function astronaut(x, y, t, ph) {
+  const s = Math.min(W * 0.012, 14), bob = reduce ? 0 : Math.sin(t * 3 + ph) * 1.5;
+  ctx.fillStyle = '#efe9e2'; ctx.fillRect(x - s * 0.5, y - s * 2.1 + bob, s, s * 1.2);
+  ctx.beginPath(); ctx.arc(x, y - s * 2.5 + bob, s * 0.55, 0, 7); ctx.fill();
+  ctx.fillStyle = '#d9a24a'; ctx.beginPath(); ctx.arc(x + s * 0.12, y - s * 2.5 + bob, s * 0.32, 0, 7); ctx.fill();
+  ctx.fillStyle = '#d8d0c8'; ctx.fillRect(x - s * 0.45, y - s * 0.9 + bob, s * 0.35, s * 0.9); ctx.fillRect(x + s * 0.1, y - s * 0.9 + bob, s * 0.35, s * 0.9);
+}
+function drone(x, y, t) {
+  ctx.fillStyle = '#d6d0c8'; ctx.fillRect(x - 6, y, 12, 8);
+  ctx.strokeStyle = '#d6d0c8'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 10); ctx.stroke();
+  const sp = reduce ? 1 : Math.cos(t * 40);
+  ctx.strokeStyle = 'rgba(240,235,230,.8)'; ctx.beginPath(); ctx.moveTo(x - 20 * sp, y - 10); ctx.lineTo(x + 20 * sp, y - 10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x - 18 * sp, y - 6); ctx.lineTo(x + 18 * sp, y - 6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x - 5, y + 8); ctx.lineTo(x - 9, y + 16); ctx.moveTo(x + 5, y + 8); ctx.lineTo(x + 9, y + 16); ctx.stroke();
+}
+function launch() {
+  const k = scene.launchT, x = W * 0.08, y0 = H * 0.7 + H * 0.1, y = y0 - k * k * H * 1.1;
+  ctx.fillStyle = '#f2ece4'; ctx.beginPath(); ctx.moveTo(x, y - 30); ctx.lineTo(x + 7, y - 16); ctx.lineTo(x + 7, y); ctx.lineTo(x - 7, y); ctx.lineTo(x - 7, y - 16); ctx.fill();
+  if (k > 0 && k < 1) { const fl = ctx.createLinearGradient(0, y, 0, y + 40); fl.addColorStop(0, 'rgba(255,220,140,.95)'); fl.addColorStop(1, 'rgba(255,120,40,0)'); ctx.fillStyle = fl; ctx.beginPath(); ctx.moveTo(x - 6, y); ctx.lineTo(x, y + 40 + Math.random() * 8); ctx.lineTo(x + 6, y); ctx.fill(); }
+}
+
+// ---------- Boot ----------
+function start(data) {
+  if (data && data.S) S = data.S;
+  buildGauges(); renderGauges(); render();
+  requestAnimationFrame(frame);
+}
+try { window.claude?.hot?.snapshot?.(() => ({ S })); } catch (e) {}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body></html>
