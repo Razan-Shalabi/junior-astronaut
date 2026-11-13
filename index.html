@@ -163,6 +163,34 @@ body {
 .pz-dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #ff5a3c; box-shadow: 0 0 0 2px #fff, 0 0 16px 6px rgba(255,120,60,.9); animation: ping 1s ease-in-out infinite; z-index: 6; }
 @keyframes ping { 50% { transform: scale(1.6); } }
 .pz-label { font-family: var(--f-display); font-weight: 800; font-size: 21px; color: var(--navy); line-height: 1.25; }
+/* ---------- Level 1 stations ---------- */
+.air-wrap { display: grid; grid-template-columns: 1fr 90px 1fr; gap: 12px; align-items: center; }
+.robot-box { background: #0f1838; border-radius: 14px; padding: 8px; } .robot { width: 100%; max-height: 170px; }
+.flask { display: flex; flex-direction: column-reverse; gap: 4px; padding: 8px; border: 4px solid #9aa6bd; border-top-width: 0; border-radius: 0 0 22px 22px; background: rgba(143,208,239,.15); }
+.cube { all: unset; box-sizing: border-box; cursor: pointer; height: 34px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; color: #fff; font-size: 15px; }
+.cube.o2 { background: #3a8fd8; } .cube.n2 { background: #7a8296; } .cube.emptyc { border: 2px dashed #c9d0de; cursor: default; }
+.cube.big { height: 70px; font-size: 22px; flex-direction: column; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 0 rgba(0,0,0,.2); }
+.cube.big small { font-size: 12px; font-weight: 700; }
+.cube-src { display: flex; flex-direction: column; gap: 10px; }
+.cube:focus-visible { outline: 3px solid var(--sky); }
+.bottles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.btl { background: #fff; border: 3px solid #efe1c4; border-radius: 14px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.btl svg { width: 46px; height: 80px; } .btl b { color: var(--navy); font-size: 14.5px; }
+.btl .bs { display: flex; flex-direction: column; gap: 5px; width: 100%; } .btl .sb { text-align: center; }
+.btl.ok { border-color: var(--lime-dk); } .btl.no { border-color: var(--red); } .btl .why { color: #9a2a20; font-weight: 700; font-size: 12.5px; }
+.sky-day, .sky-night { border-radius: 14px; padding: 10px 14px; font-weight: 800; }
+.sky-day { background: #fff1d6; color: #8a4a0a; } .sky-night { background: #1f2a5c; color: #dfe8ff; }
+.thermo { position: relative; height: 70px; margin: 18px 6px 4px; }
+.thermo::before { content: ""; position: absolute; left: 0; right: 0; top: 26px; height: 18px; border-radius: 10px; background: linear-gradient(90deg, #5a9be0, #8fd0ef 40%, #ffd27a 60%, #ec5a50); }
+.tz { position: absolute; top: 20px; height: 30px; border: 4px solid #6a9a1f; border-radius: 8px; background: rgba(156,204,60,.35); }
+.tarrow { position: absolute; top: 0; transform: translateX(-50%); transition: left .35s; display: flex; flex-direction: column; align-items: center; }
+.tarrow span { background: var(--navy); color: #fff; font-weight: 800; font-size: 13px; padding: 1px 7px; border-radius: 8px; margin-top: -18px; }
+.tarrow::after { content: "▼"; color: var(--navy); font-size: 16px; line-height: 1; }
+.tl { position: absolute; left: 0; right: 0; top: 50px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--muted); }
+.inds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ind { background: #eaf6d2; border: 3px solid var(--lime-dk); border-radius: 14px; padding: 10px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.ind span { font-size: 28px; } .ind b { color: var(--navy); } .ind i { font-style: normal; color: #3c6a10; font-weight: 800; }
+@media (max-width: 640px) { .air-wrap { grid-template-columns: 1fr 80px; } .robot-box { grid-column: 1 / -1; } .bottles { grid-template-columns: 1fr; } }
 /* ---------- Level 2: Training Academy ---------- */
 .nline { display: flex; gap: 10px; align-items: center; background: #eef8dc; border-radius: 14px; padding: 8px 12px; font-weight: 700; color: #34480f; font-size: 15px; }
 .nline .nface { flex: none; width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #c6ec6f, #8cc232); position: relative; }
@@ -1374,7 +1402,7 @@ const L1 = (() => {
   };
   const OBJ = {
     puzzle: { en: 'Fix Nuri’s map to find out where you are.', ar: 'صلّح خريطة نوري لتعرف وين إنت.' },
-    explore: { en: () => `Explore the desert! Walk to the glowing lights (${S.count}/3).`, ar: () => `استكشف الصحراء! امشِ للأضواء اللي بتلمع (${S.count}/3).` },
+    explore: { en: () => `Visit the 3 training stations (${S.count}/3).`, ar: () => `زور محطات التدريب الثلاث (${S.count}/3).` },
     hill: { en: 'Climb the hill with the golden light.', ar: 'اطلع عالتلة اللي عليها الضوء الذهبي.' },
     academy: { en: 'Walk to the Academy entrance.', ar: 'امشِ لمدخل الأكاديمية.' },
   };
@@ -1388,9 +1416,9 @@ const L1 = (() => {
       { who: 'kid', en: 'We’re still on Earth?!', ar: 'إحنا لسا على الأرض؟!' },
       { who: 'nuri', expr: 'happy', en: 'Yes! The Atacama Desert. NASA studies it because parts of it are like Mars. Let’s explore!', ar: 'إيه! صحراء أتاكاما. ناسا بتدرسها لأن أجزاء منها بتشبه المريخ. يلا نستكشف!' },
     ],
-    dry: [{ who: 'nuri', expr: 'idle', en: 'It almost never rains here, a bit like Mars.', ar: 'تقريباً ما بتشتي هون، شوي متل المريخ.' }],
-    dunes: [{ who: 'nuri', expr: 'happy', en: 'Wind shapes rocks and dunes, here and on Mars!', ar: 'الريح بتشكّل الصخور والكثبان، هون وعلى المريخ!' }],
-    plant: [{ who: 'nuri', expr: 'wow', en: 'A plant! Life can survive even in very dry places.', ar: 'نبتة! الحياة بتقدر تعيش حتى بالأماكن الجافة.' }],
+    dry: [{ who: 'nuri', expr: 'idle', en: 'Water station! Our bodies need water every day.', ar: 'محطة الماي! جسمنا بيحتاج ماي كل يوم.' }],
+    dunes: [{ who: 'nuri', expr: 'wow', en: 'Air station! This robot is so sleepy…', ar: 'محطة الهوا! هالروبوت نعسان كثير…' }],
+    plant: [{ who: 'nuri', expr: 'idle', en: 'Heat station! Deserts get very hot and very cold.', ar: 'محطة الحرارة! الصحرا بتصير شوب كثير وبرد كثير.' }],
     hill: [
       { who: 'kid', en: 'Is this just like Mars?', ar: 'هاد متل المريخ بالزبط؟' },
       { who: 'nuri', expr: 'idle', en: 'Not exactly! Mars has thin air and is much colder. Let’s learn how astronauts survive there!', ar: 'مش بالزبط! هوا المريخ خفيف وهو أبرد بكثير. يلا نتعلّم كيف رواد الفضاء بيعيشوا هناك!' },
@@ -1398,11 +1426,10 @@ const L1 = (() => {
     academy: [{ who: 'nuri', expr: 'wow', en: 'That’s the Junior Astronaut Training Academy! Let’s go!', ar: 'هاي أكاديمية تدريب رواد الفضاء الصغار! يلا!' }],
   };
   const FACTS = [
-    { en: 'You are in the Atacama Desert in Chile, South America, one of the driest places on Earth.', ar: 'إنت بصحراء أتاكاما في تشيلي بأمريكا الجنوبية، واحدة من أجفّ الأماكن على الأرض.' },
-    { en: 'NASA scientists study this desert because some of its conditions are similar to Mars.', ar: 'علماء ناسا بيدرسوا هالصحراء لأن بعض ظروفها بتشبه ظروف المريخ.' },
-    { en: 'Wind shapes rocks and sand dunes on Earth and on Mars.', ar: 'الريح بتشكّل الصخور والكثبان الرملية على الأرض وعلى المريخ.' },
-    { en: 'Life can survive even in very dry places.', ar: 'الحياة بتقدر تعيش حتى بالأماكن الجافة كثير.' },
-    { en: 'Mars has much thinner air and is much colder than Earth, so astronauts must prepare carefully.', ar: 'هوا المريخ أرقّ بكثير وهو أبرد بكثير من الأرض، فرواد الفضاء لازم يتحضّروا منيح.' },
+    { en: 'The Atacama Desert in Chile is one of the driest places on Earth.', ar: 'صحراء أتاكاما في تشيلي من أجفّ الأماكن على الأرض.' },
+    { en: 'Earth’s air is about 78% nitrogen and 21% oxygen.', ar: 'هوا الأرض حوالي 78% نيتروجين و21% أكسجين.' },
+    { en: 'We need about 2 to 3 liters of clean water a day.', ar: 'منحتاج حوالي 2 لـ 3 لتر ماي نظيفة باليوم.' },
+    { en: 'People feel comfortable at about 20 to 25 °C.', ar: 'الإنسان بيرتاح على حوالي 20 لـ 25 درجة.' },
   ];
   const HINT = {
     puzzle: [{ en: 'Start with the corner pieces. Look at the shapes of the land on each piece.', ar: 'ابدأ بقطع الزوايا. طلّع على أشكال اليابسة بكل قطعة.' }, { en: 'The white land at the very bottom goes on the bottom row.', ar: 'اليابسة البيضا اللي تحت خالص مكانها بالصف التحتاني.' }, { en: 'Lines on the edges of two pieces should join up, like roads.', ar: 'الخطوط على أطراف القطع لازم تكمّل بعضها، متل الطرق.' }],
@@ -1412,7 +1439,7 @@ const L1 = (() => {
   };
 
   let S = {};
-  const fresh = () => ({ step: 'intro', count: 0, found: {}, hint: {}, panel: null, pz: null });
+  const fresh = () => ({ step: 'intro', count: 0, found: {}, hint: {}, panel: null, pz: null, st: null, done1: {}, mis: { air: 0, water: 0, heat: 0 } });
   S = fresh();
 
   // ---------- World ----------
@@ -1561,9 +1588,136 @@ const L1 = (() => {
   }
 
   // ---------- Exploration ----------
+  // ---------- Training stations: air, water, heat ----------
+  const ST = { dunes: 'air', dry: 'water', plant: 'heat' };
+  const SF = {
+    eb: { en: 'Level 1 · Training camp', ar: 'الليفل 1 · مخيم التدريب' }, did: { en: 'Did you know?', ar: 'هل تعلم؟' },
+    airT: { en: 'Wake up the sleepy robot', ar: 'صحّي الروبوت النعسان' }, airP: { en: 'Fill the bottle with 5 cubes of air.', ar: 'عبّي القنينة بـ 5 مكعبات هوا.' },
+    o2: { en: 'Oxygen', ar: 'أكسجين' }, n2: { en: 'Nitrogen', ar: 'نيتروجين' },
+    wake: { en: 'Give the air to the robot', ar: 'أعطي الهوا للروبوت' }, empty: { en: 'Empty', ar: 'فرّغ' },
+    airLow: { en: 'Zzz… still sleepy. Not enough oxygen!', ar: 'زززز… لسا نعسان. الأكسجين قليل!' },
+    airHigh: { en: 'Sparks! Too much oxygen can start a fire.', ar: 'شرار! الأكسجين الزيادة ممكن يعمل حريق.' },
+    airOk: { en: 'The robot is awake! 1 oxygen + 4 nitrogen, just like Earth’s air.', ar: 'الروبوت صحي! 1 أكسجين + 4 نيتروجين، متل هوا الأرض.' },
+    airFact: { en: 'Earth’s air is about 78% nitrogen and 21% oxygen.', ar: 'هوا الأرض حوالي 78% نيتروجين و21% أكسجين.' },
+    wT: { en: 'Which water can we drink?', ar: 'أي ماي منشرب؟' }, wP: { en: 'Choose for each bottle.', ar: 'اختار لكل قنينة.' },
+    clean: { en: 'Clean water', ar: 'ماي نظيفة' }, mud: { en: 'Muddy water', ar: 'ماي موحلة' }, sea: { en: 'Sea water', ar: 'ماي بحر' },
+    drink: { en: 'Drink', ar: 'اشرب' }, no: { en: 'Don’t drink', ar: 'لا تشرب' }, check: { en: 'Check', ar: 'تأكّد' },
+    mudBad: { en: 'Muddy water can make you sick.', ar: 'الماي الموحلة ممكن تمرّضك.' },
+    seaBad: { en: 'Sea water is too salty. It makes you thirstier.', ar: 'ماي البحر مالحة كثير. بتعطّشك أكثر.' },
+    cleanBad: { en: 'Clean water is safe. Your body needs it!', ar: 'الماي النظيفة آمنة. جسمك بحاجتها!' },
+    wOk: { en: 'Right! Only clean water is safe to drink.', ar: 'صح! بس الماي النظيفة آمنة للشرب.' },
+    wFact: { en: 'People need about 2 to 3 liters of water a day.', ar: 'الإنسان بيحتاج حوالي 2 لـ 3 لتر ماي باليوم.' },
+    hT: { en: 'Desert day and night', ar: 'نهار وليل الصحرا' },
+    hDay: { en: 'Daytime: the cabin is too hot! Reach the green zone.', ar: 'النهار: الكابينة شوب كثير! وصّلها للأخضر.' },
+    hNight: { en: 'Night: now it’s freezing! Reach the green zone.', ar: 'الليل: هلأ برد كثير! وصّلها للأخضر.' },
+    cool: { en: '❄️ Shade and cool', ar: '❄️ ظل وتبريد' }, warm: { en: '🔥 Heater', ar: '🔥 تدفئة' },
+    hGood: { en: 'Comfortable!', ar: 'مريح!' }, hWrong: { en: 'Oops, wrong way!', ar: 'أوبس، بالعكس!' },
+    hFact: { en: 'People feel comfortable at about 20 to 25 °C. Deserts are hot by day and cold at night.', ar: 'الإنسان بيرتاح على حوالي 20 لـ 25 درجة. الصحرا شوب بالنهار وبرد بالليل.' },
+    safeT: { en: 'Safe Home badge!', ar: 'شارة البيت الآمن!' },
+    tries: { en: (n) => (n ? `Mistakes: ${n}. Mistakes help us learn!` : 'No mistakes. Amazing!'), ar: (n) => (n ? `الأخطاء: ${n}. الأخطاء بتعلّمنا!` : 'ولا غلطة. رهيب!') },
+    nuriEnd: { en: 'Earth gives us all this for free. But what happens when we leave it?', ar: 'الأرض بتعطينا كل هاد ببلاش. بس شو بيصير لما نتركها؟' },
+    ind: { air: { en: 'Air', ar: 'هوا' }, water: { en: 'Water', ar: 'ماي' }, heat: { en: 'Heat', ar: 'حرارة' } },
+  };
+  const ICON = { air: '🌬️', water: '💧', heat: '🌡️' };
+  HINT.air = [{ en: 'What does the robot need to wake up?', ar: 'شو بيحتاج الروبوت ليصحى؟' }, { en: 'Earth’s air has much more nitrogen than oxygen.', ar: 'هوا الأرض فيه نيتروجين أكثر بكثير من الأكسجين.' }, { en: 'Air is about 4 parts nitrogen for every 1 part oxygen.', ar: 'الهوا تقريباً 4 أجزاء نيتروجين لكل جزء أكسجين.' }];
+  HINT.water = [{ en: 'Would you drink water you can’t see through?', ar: 'بتشرب ماي ما بتشوف من خلالها؟' }, { en: 'What happens if you drink very salty water?', ar: 'شو بيصير إذا شربت ماي مالحة كثير؟' }, { en: 'Safe water has no dirt and no salt.', ar: 'الماي الآمنة ما فيها وسخ ولا ملح.' }];
+  HINT.heat = [{ en: 'Look at the arrow. Too hot or too cold?', ar: 'طلّع عالسهم. شوب ولا برد؟' }, { en: 'When it’s hot, what helps? When it’s cold?', ar: 'لما يكون شوب، شو بيساعد؟ ولما يكون برد؟' }, { en: 'Keep pressing until the arrow is in the green zone.', ar: 'ضلّك اضغط لحد ما السهم يوصل للأخضر.' }];
+  const SECRET1 = { air: 'Correct answer: 1 oxygen cube and 4 nitrogen cubes.', water: 'Correct answer: only the clean water is Drink; muddy and sea water are Don’t drink.', heat: 'Daytime needs the cooling button, night needs the heater, until the arrow is between 20 and 25 °C.' };
+  const head1 = (st, t) => `<div class="eyebrow">${tr(SF.eb)}</div><h2>${ICON[st]} ${tr(t)}</h2>`;
+  const didYou = (f) => `<div class="science"><div class="k">${tr(SF.did)}</div><p>${tr(f)}</p></div>`;
+  function stationDone(el, st, fact) {
+    SFX.success();
+    const box = document.createElement('div'); box.className = 'l2-success'; box.innerHTML = `${didYou(fact)}<div class="actions"><span></span><button class="btn green" id="stOk">${tr(UI.cont)}</button></div>`;
+    el.appendChild(box); box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    box.querySelector('#stOk').onclick = () => { closePanel(); S.st = null; S.done1[st] = true; S.count++; afterStation(); };
+  }
+  function airTask(el) {
+    const cubes = []; let state = 'sleep';
+    const robot = () => `<svg viewBox="0 0 140 130" class="robot"><rect x="66" y="4" width="8" height="18" fill="#9aa6bd"/><circle cx="70" cy="6" r="6" fill="${state === 'awake' ? '#9ccc3c' : '#ec5a50'}"/><rect x="25" y="20" width="90" height="62" rx="16" fill="#e3e7ef" stroke="#9aa6bd" stroke-width="4"/>${state === 'awake' ? '<circle cx="52" cy="50" r="10" fill="#1b1530"/><circle cx="88" cy="50" r="10" fill="#1b1530"/><circle cx="55" cy="46" r="3" fill="#fff"/><circle cx="91" cy="46" r="3" fill="#fff"/><path d="M55 68 Q70 78 85 68" stroke="#1b1530" stroke-width="4" fill="none"/>' : '<path d="M42 52 h20 M78 52 h20" stroke="#1b1530" stroke-width="5" stroke-linecap="round"/><path d="M60 70 h20" stroke="#1b1530" stroke-width="4" stroke-linecap="round"/><text x="112" y="24" font-size="18" font-weight="800" fill="#5a9be0">Zz</text>'}${state === 'spark' ? '<text x="6" y="30" font-size="26">⚡</text><text x="112" y="70" font-size="26">🔥</text>' : ''}<rect x="40" y="86" width="60" height="38" rx="10" fill="#c9d0de"/></svg>`;
+    function draw() {
+      el.innerHTML = head1('air', SF.airT) + `<div class="nline"><span class="nface"></span><span>${tr(SF.airP)}</span></div>
+        <div class="air-wrap" dir="ltr"><div class="robot-box">${robot()}</div><div class="flask">${Array.from({ length: 5 }, (_, i) => `<button class="cube ${cubes[i] || 'emptyc'}" data-i="${i}" ${cubes[i] ? '' : 'disabled'}>${cubes[i] === 'o2' ? 'O₂' : cubes[i] === 'n2' ? 'N₂' : ''}</button>`).join('')}</div>
+        <div class="cube-src"><button class="cube o2 big" id="addO">O₂<small>${tr(SF.o2)}</small></button><button class="cube n2 big" id="addN">N₂<small>${tr(SF.n2)}</small></button></div></div>
+        <div id="airFb"></div><div class="actions"><button class="btn ghost small" id="airEmpty">${tr(SF.empty)}</button><button class="btn" id="airGo" ${cubes.length === 5 && state !== 'awake' ? '' : 'disabled'}>${tr(SF.wake)}</button></div>`;
+      const add = (k) => { if (cubes.length < 5 && state !== 'awake') { cubes.push(k); state = 'sleep'; SFX.snap(); draw(); } };
+      el.querySelector('#addO').onclick = () => add('o2'); el.querySelector('#addN').onclick = () => add('n2');
+      el.querySelectorAll('.flask .cube').forEach((b) => (b.onclick = () => { if (state === 'awake') return; cubes.splice(+b.dataset.i, 1); state = 'sleep'; draw(); }));
+      el.querySelector('#airEmpty').onclick = () => { if (state === 'awake') return; cubes.length = 0; state = 'sleep'; draw(); };
+      el.querySelector('#airGo').onclick = () => {
+        const o = cubes.filter((c) => c === 'o2').length;
+        if (o === 1) { state = 'awake'; draw(); el.querySelector('#airFb').innerHTML = `<div class="feedback good">${tr(SF.airOk)}</div>`; stationDone(el, 'air', SF.airFact); return; }
+        S.mis.air++; SFX.nope(); state = o === 0 ? 'sleep' : 'spark'; draw();
+        el.querySelector('#airFb').innerHTML = `<div class="feedback try">${tr(o === 0 ? SF.airLow : SF.airHigh)}</div>`;
+      };
+    }
+    draw();
+  }
+  function waterTask(el) {
+    const B3 = [['clean', '#8fd0ef', true], ['mud', '#8a6a3a', false], ['sea', '#3a6fc0', false]], pick = {}; let checked = false, done = false;
+    function draw() {
+      el.innerHTML = head1('water', SF.wT) + `<div class="nline"><span class="nface"></span><span>${tr(SF.wP)}</span></div>
+        <div class="bottles">${B3.map(([k, col]) => { const st = checked && pick[k] !== undefined ? (pick[k] === (k === 'clean') ? 'ok' : 'no') : ''; return `<div class="btl ${st}"><svg viewBox="0 0 40 70"><rect x="14" y="2" width="12" height="10" rx="2" fill="#9aa6bd"/><path d="M10 14 h20 l4 8 v42 a4 4 0 0 1-4 4 h-20 a4 4 0 0 1-4-4 v-42z" fill="#eef4fa" stroke="#9aa6bd" stroke-width="2"/><rect x="8" y="30" width="24" height="36" rx="3" fill="${col}" opacity=".85"/>${k === 'sea' ? '<text x="20" y="54" font-size="11" text-anchor="middle" fill="#fff">NaCl</text>' : ''}${k === 'mud' ? '<circle cx="15" cy="48" r="3" fill="#5a3a1a"/><circle cx="24" cy="58" r="2.5" fill="#5a3a1a"/>' : ''}</svg><b>${tr(SF[k])}</b><div class="bs"><button class="sb" data-k="${k}" data-v="1" aria-pressed="${pick[k] === true}" ${done ? 'disabled' : ''}>💧 ${tr(SF.drink)}</button><button class="sb" data-k="${k}" data-v="0" aria-pressed="${pick[k] === false}" ${done ? 'disabled' : ''}>🚫 ${tr(SF.no)}</button></div>${st === 'no' ? `<small class="why">${tr(k === 'mud' ? SF.mudBad : k === 'sea' ? SF.seaBad : SF.cleanBad)}</small>` : ''}</div>`; }).join('')}</div>
+        <div id="wFb"></div><div class="actions"><span></span><button class="btn" id="wGo" ${Object.keys(pick).length === 3 && !done ? '' : 'disabled'}>${tr(SF.check)}</button></div>`;
+      el.querySelectorAll('.bottles .sb').forEach((b) => (b.onclick = () => { pick[b.dataset.k] = b.dataset.v === '1'; checked = false; SFX.pick(); draw(); }));
+      el.querySelector('#wGo').onclick = () => {
+        checked = true; const ok = B3.every(([k]) => pick[k] === (k === 'clean'));
+        if (!ok) { S.mis.water++; SFX.nope(); draw(); return; }
+        done = true; draw(); el.querySelector('#wFb').innerHTML = `<div class="feedback good">${tr(SF.wOk)}</div>`; stationDone(el, 'water', SF.wFact);
+      };
+    }
+    draw();
+  }
+  function heatTask(el) {
+    let phase = 'day', temp = 38, msg = '', fin = false;
+    const pct = (v) => Math.max(0, Math.min(100, (v / 45) * 100));
+    function draw() {
+      const inG = temp >= 20 && temp <= 25;
+      el.innerHTML = head1('heat', SF.hT) + `<div class="sky-${phase}">${phase === 'day' ? '☀️' : '🌙'} ${tr(phase === 'day' ? SF.hDay : SF.hNight)}</div>
+        <div class="thermo" dir="ltr"><div class="tz" style="left:${pct(20)}%;width:${pct(25) - pct(20)}%"></div><div class="tarrow" style="left:${pct(temp)}%"><span>${temp} °C</span></div><div class="tl"><span>0</span><span>45 °C</span></div></div>
+        ${msg ? `<div class="feedback ${inG ? 'good' : 'try'}">${msg}</div>` : ''}
+        <div class="actions"><button class="btn" id="hC" ${fin || (inG && phase === 'day') ? 'disabled' : ''}>${tr(SF.cool)}</button><button class="btn" id="hW" ${fin || inG ? 'disabled' : ''}>${tr(SF.warm)}</button></div>`;
+      const press = (d) => {
+        const before = Math.abs(temp - 22.5); temp += d; const after = Math.abs(temp - 22.5);
+        if (after > before) { S.mis.heat++; SFX.nope(); msg = tr(SF.hWrong); } else { SFX.pick(); msg = ''; }
+        if (temp >= 20 && temp <= 25) {
+          SFX.snap(); msg = tr(SF.hGood);
+          if (phase === 'day') { draw(); setTimeout(() => { phase = 'night'; temp = 5; msg = ''; draw(); }, 1300); return; }
+          fin = true; draw(); stationDone(el, 'heat', SF.hFact); return;
+        }
+        draw();
+      };
+      el.querySelector('#hC').onclick = () => press(-4); el.querySelector('#hW').onclick = () => press(4);
+    }
+    draw();
+  }
+  const TASKFN = { air: airTask, water: waterTask, heat: heatTask };
+  function afterStation() {
+    if (S.count < 3) { cap(`${S.count} / 3 ✓`, 1800); setObjective('l1_explore'); return; }
+    const mis = S.mis.air + S.mis.water + S.mis.heat; SFX.fanfare();
+    panel((el) => {
+      el.innerHTML = `<div class="eyebrow">${tr(SF.eb)}</div><h2>🏠 ${tr(SF.safeT)}</h2><div class="inds">${['air', 'water', 'heat'].map((k) => `<div class="ind"><span>${ICON[k]}</span><b>${tr(SF.ind[k])}</b><i>✓</i></div>`).join('')}</div>
+        <div class="nline"><span class="nface"></span><span>${tr(SF.nuriEnd)}</span></div><p class="mini-note">${tr(SF.tries, mis)}</p><div class="actions"><span></span><button class="btn green" id="shGo">${tr(UI.cont)}</button></div>`;
+      el.querySelector('#shGo').onclick = () => { closePanel(); S.step = 'hill'; B.hill.visible = true; setObjective('l1_hill'); cap(tr(UI.hillCap), 4000); };
+    });
+  }
+  // station props
+  const propM = mat(0xe3e7ef, { roughness: 0.5 }), propD = mat(0x9aa6bd, { roughness: 0.5 });
+  { const x = POS.dunes.x + 1.8, z = POS.dunes.z - 0.8, y = dh(x, z), r = new T.Group(); r.position.set(x, y, z); r.rotation.y = -0.6; W.add(r);
+    mesh(new T.BoxGeometry(0.9, 0.7, 0.6), propM, 0, 0.45, 0, r); mesh(new T.BoxGeometry(0.8, 0.55, 0.55), propM, 0, 1.1, 0, r);
+    mesh(new T.BoxGeometry(0.5, 0.06, 0.02), mat(0x1b1530), 0, 1.12, 0.28, r); mesh(new T.CylinderGeometry(0.03, 0.03, 0.3, 6), propD, 0, 1.5, 0, r); mesh(new T.SphereGeometry(0.07, 8, 6), mat(0xec5a50), 0, 1.68, 0, r);
+    solids.push({ x, z, r: 0.7 }); }
+  { const x = POS.dry.x + 1.8, z = POS.dry.z - 0.6, y = dh(x, z), g = new T.Group(); g.position.set(x, y, z); W.add(g);
+    mesh(new T.BoxGeometry(1.4, 0.08, 0.7), mat(0xe8d2b0), 0, 0.7, 0, g); [[-0.6, -0.25], [0.6, -0.25], [-0.6, 0.25], [0.6, 0.25]].forEach(([a, b]) => mesh(new T.BoxGeometry(0.06, 0.7, 0.06), propD, a, 0.35, b, g));
+    [[0x8fd0ef, -0.4], [0x8a6a3a, 0], [0x3a6fc0, 0.4]].forEach(([c, dx]) => { mesh(new T.CylinderGeometry(0.1, 0.1, 0.36, 12), new T.MeshStandardMaterial({ color: c, transparent: true, opacity: 0.85, roughness: 0.2 }), dx, 0.92, 0, g); mesh(new T.CylinderGeometry(0.04, 0.04, 0.08, 8), propD, dx, 1.14, 0, g); });
+    solids.push({ x, z, r: 0.9 }); }
+  { const x = POS.plant.x - 2.6, z = POS.plant.z - 1.2, y = dh(x, z), g = new T.Group(); g.position.set(x, y, z); g.rotation.y = 0.5; W.add(g);
+    mesh(new T.BoxGeometry(2, 1.6, 1.6), mat(0xf4f1ea, { roughness: 0.6 }), 0, 0.8, 0, g); const roof = mesh(new T.ConeGeometry(1.5, 0.8, 4), mat(0xec8a3c), 0, 2, 0, g); roof.rotation.y = Math.PI / 4;
+    mesh(new T.BoxGeometry(0.6, 1.1, 0.05), mat(0x5a3a1a), 0, 0.55, 0.81, g); mesh(new T.CylinderGeometry(0.05, 0.05, 1, 8), mat(0xffffff), 1.2, 0.9, 0.9, g); mesh(new T.SphereGeometry(0.1, 8, 6), mat(0xec5a50), 1.2, 0.4, 0.9, g);
+    solids.push({ x, z, r: 1.3 }); }
   function discover(k) {
     S.found[k] = true; B[k].visible = false; SFX.discover(); setExpr(girl, 'wow');
     burst(new T.Vector3(POS[k].x, dh(POS[k].x, POS[k].z) + 1.2, POS[k].z), 0xffd27a, 26, 2.2, 1.6);
+    if (ST[k]) { showDialog(TALK[k], () => { setExpr(girl, 'happy'); S.st = ST[k]; panel(TASKFN[ST[k]]); }); return; }
     showDialog(TALK[k], () => {
       setExpr(girl, 'happy'); setExpr(nuri, 'idle');
       if (k === 'hill') return reveal();
@@ -1626,16 +1780,16 @@ const L1 = (() => {
     $('lvOverlay').dir = LANG === 'ar' ? 'rtl' : 'ltr';
     if (S.step === 'puzzle') pzLabels(); else if (S.panel) S.panel($('lvPanel'));
   }
-  const group = () => (S.step === 'intro' || S.step === 'puzzle' ? 'puzzle' : S.step === 'explore' ? 'explore' : S.step === 'hill' ? 'hill' : 'academy');
+  const group = () => (S.st ? S.st : S.step === 'intro' || S.step === 'puzzle' ? 'puzzle' : S.step === 'explore' ? 'explore' : S.step === 'hill' ? 'hill' : 'academy');
   return {
     start, update, action, relang,
     updateRover: () => {}, roverMode: () => false,
     panelOpen: () => !$('lvOverlay').hidden,
-    qa: () => (group() === 'puzzle' ? [{ q: UI.chipHint, hint: true }, { q: UI.chipHow, a: UI.how }] : [{ q: UI.chipHint, hint: true }, QA[0], QA[1], QA[2]]),
+    qa: () => (S.st ? [{ q: UI.chipHint, hint: true }] : group() === 'puzzle' ? [{ q: UI.chipHint, hint: true }, { q: UI.chipHow, a: UI.how }] : [{ q: UI.chipHint, hint: true }, QA[0], QA[1], QA[2]]),
     hint: () => { const gr = group(), arr = HINT[gr], i = S.hint[gr] || 0; S.hint[gr] = i + 1; return tr(arr[Math.min(i, arr.length - 1)]); },
-    context: () => (group() === 'puzzle'
+    context: () => S.st ? `Current part of Level 1: the ${S.st} training station. For your private knowledge only (never reveal it directly, only hint toward it step by step): ${SECRET1[S.st]}` : (group() === 'puzzle'
       ? 'IMPORTANT: right now the child does NOT know where they are and is fixing a broken world-map puzzle to find out. Do not say the name of the desert, the country or the continent, and do not confirm guesses about it. Encourage them to finish the map.'
-      : `Current part of Level 1: free exploration of the Atacama Desert. The child walks to glowing lights to make discoveries (dry ground, wind-shaped rocks and dunes, a small plant, then a hilltop view), and afterwards walks to the Junior Astronaut Training Academy. Found so far: ${S.count} of 3.`),
+      : `Current part of Level 1: free exploration of the Atacama Desert. The child visits three training stations (air, water, heat), then a hilltop view, and afterwards walks to the Junior Astronaut Training Academy. Found so far: ${S.count} of 3.`),
   };
 })();
 
