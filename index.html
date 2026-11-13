@@ -163,6 +163,26 @@ body {
 .pz-dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #ff5a3c; box-shadow: 0 0 0 2px #fff, 0 0 16px 6px rgba(255,120,60,.9); animation: ping 1s ease-in-out infinite; z-index: 6; }
 @keyframes ping { 50% { transform: scale(1.6); } }
 .pz-label { font-family: var(--f-display); font-weight: 800; font-size: 21px; color: var(--navy); line-height: 1.25; }
+/* ---------- Fun layer: stars, confetti, reactions ---------- */
+.winbox { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.stars { display: flex; justify-content: center; gap: 10px; font-size: 46px; line-height: 1; }
+.stars span { color: #e2dccd; transform: scale(0); animation: starIn .45s cubic-bezier(.3,1.8,.5,1) forwards; }
+.stars span.on { color: #ffc22e; text-shadow: 0 3px 0 #c98a00; }
+@keyframes starIn { to { transform: scale(1); } }
+.fact1 { background: #fff8e2; border-radius: 12px; padding: 8px 12px; font-weight: 700; color: #6a4a0a; font-size: 14.5px; text-align: center; }
+.cf { position: absolute; top: -14px; width: 10px; height: 14px; border-radius: 2px; z-index: 60; pointer-events: none; animation: cfall 1.7s ease-in forwards; }
+@keyframes cfall { to { top: 105%; transform: translateX(40px) rotate(720deg); opacity: .6; } }
+.tip1 { font-weight: 800 !important; color: var(--navy) !important; font-size: 17px !important; text-align: center; }
+.robot-box.awake svg { animation: dance .45s ease-in-out 4; }
+.robot-box.spark { animation: shk .3s 3; }
+@keyframes dance { 25% { transform: translateY(-10px) rotate(-6deg); } 75% { transform: translateY(-10px) rotate(6deg); } }
+.flask .cube.newc { animation: popIn .3s cubic-bezier(.3,1.8,.5,1); }
+@keyframes popIn { from { transform: scale(0) translateY(-30px); } to { transform: none; } }
+.bottles.win .btl.ok { animation: hop .5s ease 2; }
+@keyframes hop { 50% { transform: translateY(-10px); } }
+.feel { font-size: 58px; text-align: center; line-height: 1; transition: transform .2s; }
+.feel.bump { animation: bump .3s; } @keyframes bump { 50% { transform: scale(1.3); } }
+.dummy.win { animation: dance .45s ease-in-out 3; }
 /* ---------- Level 1 stations ---------- */
 .air-wrap { display: grid; grid-template-columns: 1fr 90px 1fr; gap: 12px; align-items: center; }
 .robot-box { background: #0f1838; border-radius: 14px; padding: 8px; } .robot { width: 100%; max-height: 170px; }
@@ -606,7 +626,7 @@ const SFX = (() => {
     jump: () => tone(300, 0.18, 'sine', 0.07, 0, 2),
     pick: () => {},
     snap: () => { tone(660, 0.08, 'triangle', 0.1); tone(990, 0.14, 'sine', 0.08, 0.06); },
-    nope: () => tone(210, 0.16, 'sine', 0.08, 0, 0.7),
+    nope: () => { G.nopes = (G.nopes || 0) + 1; tone(210, 0.16, 'sine', 0.08, 0, 0.7); },
     stamp: () => { noise(0.18, 400, 90, 0.35, 0, 0.8, 'lowpass'); tone(110, 0.2, 'sine', 0.25, 0, 0.5); [1046.5, 1318.5, 1568].forEach((f, i) => tone(f, 0.35, 'triangle', 0.09, 0.18 + i * 0.09)); },
     alarm: () => { for (let i = 0; i < 4; i++) { tone(880, 0.22, 'square', 0.05, i * 0.5); tone(660, 0.22, 'square', 0.05, i * 0.5 + 0.25); } },
     beam: () => {},
@@ -1370,6 +1390,11 @@ $('skipL1Btn').addEventListener('click', () => { G.name = $('nameInput').value; 
 $('skipL2Btn').addEventListener('click', () => { G.name = $('nameInput').value; $('titleScreen').hidden = true; L2.start(); });
 $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('startBtn').click(); });
 
+// ============================== Fun helpers ==============================
+function starsFor(n) { return n === 0 ? 3 : n <= 2 ? 2 : 1; }
+function winBox(stars, fact, id, label) { return `<div class="winbox"><div class="stars">${[1, 2, 3].map((i) => `<span class="${i <= stars ? 'on' : ''}" style="animation-delay:${i * 0.15}s">★</span>`).join('')}</div><div class="fact1">💡 ${fact}</div><div class="actions"><span></span><button class="btn green" id="${id}">${label}</button></div></div>`; }
+function confetti() { const ov = $('lvOverlay'); for (let i = 0; i < 46; i++) { const c = document.createElement('i'); c.className = 'cf'; c.style.left = Math.random() * 100 + '%'; c.style.background = ['#ec8a3c', '#9ccc3c', '#8fd0ef', '#ffd27a', '#d8433a'][i % 5]; c.style.animationDelay = Math.random() * 0.35 + 's'; ov.appendChild(c); setTimeout(() => c.remove(), 2200); } }
+
 // ============================== LEVEL 1: The Secrets of the Atacama Desert ==============================
 const L1 = (() => {
   const tr = (o, ...a) => { const v = o[LANG]; return typeof v === 'function' ? v(...a) : v; };
@@ -1592,26 +1617,26 @@ const L1 = (() => {
   const ST = { dunes: 'air', dry: 'water', plant: 'heat' };
   const SF = {
     eb: { en: 'Level 1 · Training camp', ar: 'الليفل 1 · مخيم التدريب' }, did: { en: 'Did you know?', ar: 'هل تعلم؟' },
-    airT: { en: 'Wake up the sleepy robot', ar: 'صحّي الروبوت النعسان' }, airP: { en: 'Fill the bottle with 5 cubes of air.', ar: 'عبّي القنينة بـ 5 مكعبات هوا.' },
+    airT: { en: 'Wake up the robot!', ar: 'صحّي الروبوت!' }, airP: { en: 'Mix 5 air cubes!', ar: 'اخلط 5 مكعبات هوا!' },
     o2: { en: 'Oxygen', ar: 'أكسجين' }, n2: { en: 'Nitrogen', ar: 'نيتروجين' },
-    wake: { en: 'Give the air to the robot', ar: 'أعطي الهوا للروبوت' }, empty: { en: 'Empty', ar: 'فرّغ' },
+    wake: { en: '⚡ Wake up!', ar: '⚡ اصحى!' }, empty: { en: 'Empty', ar: 'فرّغ' },
     airLow: { en: 'Zzz… still sleepy. Not enough oxygen!', ar: 'زززز… لسا نعسان. الأكسجين قليل!' },
     airHigh: { en: 'Sparks! Too much oxygen can start a fire.', ar: 'شرار! الأكسجين الزيادة ممكن يعمل حريق.' },
-    airOk: { en: 'The robot is awake! 1 oxygen + 4 nitrogen, just like Earth’s air.', ar: 'الروبوت صحي! 1 أكسجين + 4 نيتروجين، متل هوا الأرض.' },
+    airOk: { en: 'BEEP BOOP! It’s awake!', ar: 'بيب بوب! صحي!' },
     airFact: { en: 'Earth’s air is about 78% nitrogen and 21% oxygen.', ar: 'هوا الأرض حوالي 78% نيتروجين و21% أكسجين.' },
-    wT: { en: 'Which water can we drink?', ar: 'أي ماي منشرب؟' }, wP: { en: 'Choose for each bottle.', ar: 'اختار لكل قنينة.' },
+    wT: { en: 'Safe to drink?', ar: 'بنشربها ولا لأ؟' }, wP: { en: 'Pick for each bottle!', ar: 'اختار لكل قنينة!' },
     clean: { en: 'Clean water', ar: 'ماي نظيفة' }, mud: { en: 'Muddy water', ar: 'ماي موحلة' }, sea: { en: 'Sea water', ar: 'ماي بحر' },
     drink: { en: 'Drink', ar: 'اشرب' }, no: { en: 'Don’t drink', ar: 'لا تشرب' }, check: { en: 'Check', ar: 'تأكّد' },
     mudBad: { en: 'Muddy water can make you sick.', ar: 'الماي الموحلة ممكن تمرّضك.' },
     seaBad: { en: 'Sea water is too salty. It makes you thirstier.', ar: 'ماي البحر مالحة كثير. بتعطّشك أكثر.' },
     cleanBad: { en: 'Clean water is safe. Your body needs it!', ar: 'الماي النظيفة آمنة. جسمك بحاجتها!' },
-    wOk: { en: 'Right! Only clean water is safe to drink.', ar: 'صح! بس الماي النظيفة آمنة للشرب.' },
+    wOk: { en: 'Gulp gulp! Perfect!', ar: 'غلب غلب! ممتاز!' },
     wFact: { en: 'People need about 2 to 3 liters of water a day.', ar: 'الإنسان بيحتاج حوالي 2 لـ 3 لتر ماي باليوم.' },
-    hT: { en: 'Desert day and night', ar: 'نهار وليل الصحرا' },
-    hDay: { en: 'Daytime: the cabin is too hot! Reach the green zone.', ar: 'النهار: الكابينة شوب كثير! وصّلها للأخضر.' },
-    hNight: { en: 'Night: now it’s freezing! Reach the green zone.', ar: 'الليل: هلأ برد كثير! وصّلها للأخضر.' },
+    hT: { en: 'Save the cabin!', ar: 'أنقذ الكابينة!' },
+    hDay: { en: 'Too hot! Cool it down!', ar: 'شوب كثير! برّدها!' },
+    hNight: { en: 'Freezing! Warm it up!', ar: 'برد كثير! دفّيها!' },
     cool: { en: '❄️ Shade and cool', ar: '❄️ ظل وتبريد' }, warm: { en: '🔥 Heater', ar: '🔥 تدفئة' },
-    hGood: { en: 'Comfortable!', ar: 'مريح!' }, hWrong: { en: 'Oops, wrong way!', ar: 'أوبس، بالعكس!' },
+    hGood: { en: 'Just right!', ar: 'مزبوط!' }, hWrong: { en: 'Oops, wrong way!', ar: 'أوبس، بالعكس!' },
     hFact: { en: 'People feel comfortable at about 20 to 25 °C. Deserts are hot by day and cold at night.', ar: 'الإنسان بيرتاح على حوالي 20 لـ 25 درجة. الصحرا شوب بالنهار وبرد بالليل.' },
     safeT: { en: 'Safe Home badge!', ar: 'شارة البيت الآمن!' },
     tries: { en: (n) => (n ? `Mistakes: ${n}. Mistakes help us learn!` : 'No mistakes. Amazing!'), ar: (n) => (n ? `الأخطاء: ${n}. الأخطاء بتعلّمنا!` : 'ولا غلطة. رهيب!') },
@@ -1623,23 +1648,24 @@ const L1 = (() => {
   HINT.water = [{ en: 'Would you drink water you can’t see through?', ar: 'بتشرب ماي ما بتشوف من خلالها؟' }, { en: 'What happens if you drink very salty water?', ar: 'شو بيصير إذا شربت ماي مالحة كثير؟' }, { en: 'Safe water has no dirt and no salt.', ar: 'الماي الآمنة ما فيها وسخ ولا ملح.' }];
   HINT.heat = [{ en: 'Look at the arrow. Too hot or too cold?', ar: 'طلّع عالسهم. شوب ولا برد؟' }, { en: 'When it’s hot, what helps? When it’s cold?', ar: 'لما يكون شوب، شو بيساعد؟ ولما يكون برد؟' }, { en: 'Keep pressing until the arrow is in the green zone.', ar: 'ضلّك اضغط لحد ما السهم يوصل للأخضر.' }];
   const SECRET1 = { air: 'Correct answer: 1 oxygen cube and 4 nitrogen cubes.', water: 'Correct answer: only the clean water is Drink; muddy and sea water are Don’t drink.', heat: 'Daytime needs the cooling button, night needs the heater, until the arrow is between 20 and 25 °C.' };
-  const head1 = (st, t) => `<div class="eyebrow">${tr(SF.eb)}</div><h2>${ICON[st]} ${tr(t)}</h2>`;
+  const head1 = (st, t) => `<h2>${ICON[st]} ${tr(t)}</h2>`;
   const didYou = (f) => `<div class="science"><div class="k">${tr(SF.did)}</div><p>${tr(f)}</p></div>`;
   function stationDone(el, st, fact) {
     SFX.success();
-    const box = document.createElement('div'); box.className = 'l2-success'; box.innerHTML = `${didYou(fact)}<div class="actions"><span></span><button class="btn green" id="stOk">${tr(UI.cont)}</button></div>`;
+    confetti(); const box = document.createElement('div'); box.className = 'l2-success'; box.innerHTML = winBox(starsFor(S.mis[st]), tr(fact), 'stOk', tr(UI.cont));
     el.appendChild(box); box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     box.querySelector('#stOk').onclick = () => { closePanel(); S.st = null; S.done1[st] = true; S.count++; afterStation(); };
   }
   function airTask(el) {
-    const cubes = []; let state = 'sleep';
-    const robot = () => `<svg viewBox="0 0 140 130" class="robot"><rect x="66" y="4" width="8" height="18" fill="#9aa6bd"/><circle cx="70" cy="6" r="6" fill="${state === 'awake' ? '#9ccc3c' : '#ec5a50'}"/><rect x="25" y="20" width="90" height="62" rx="16" fill="#e3e7ef" stroke="#9aa6bd" stroke-width="4"/>${state === 'awake' ? '<circle cx="52" cy="50" r="10" fill="#1b1530"/><circle cx="88" cy="50" r="10" fill="#1b1530"/><circle cx="55" cy="46" r="3" fill="#fff"/><circle cx="91" cy="46" r="3" fill="#fff"/><path d="M55 68 Q70 78 85 68" stroke="#1b1530" stroke-width="4" fill="none"/>' : '<path d="M42 52 h20 M78 52 h20" stroke="#1b1530" stroke-width="5" stroke-linecap="round"/><path d="M60 70 h20" stroke="#1b1530" stroke-width="4" stroke-linecap="round"/><text x="112" y="24" font-size="18" font-weight="800" fill="#5a9be0">Zz</text>'}${state === 'spark' ? '<text x="6" y="30" font-size="26">⚡</text><text x="112" y="70" font-size="26">🔥</text>' : ''}<rect x="40" y="86" width="60" height="38" rx="10" fill="#c9d0de"/></svg>`;
+    const cubes = []; let state = 'sleep', fresh1 = false;
+    const robot = () => `<svg viewBox="0 0 140 130" class="robot"><rect x="66" y="4" width="8" height="18" fill="#9aa6bd"/><circle cx="70" cy="6" r="6" fill="${state === 'awake' ? '#9ccc3c' : '#ec5a50'}"/><rect x="25" y="20" width="90" height="62" rx="16" fill="#e3e7ef" stroke="#9aa6bd" stroke-width="4"/>${state === 'awake' ? '<circle cx="52" cy="50" r="10" fill="#1b1530"/><circle cx="88" cy="50" r="10" fill="#1b1530"/><circle cx="55" cy="46" r="3" fill="#fff"/><circle cx="91" cy="46" r="3" fill="#fff"/><path d="M55 68 Q70 78 85 68" stroke="#1b1530" stroke-width="4" fill="none"/><text x="70" y="128" font-size="16" font-weight="800" text-anchor="middle" fill="#9ccc3c">BEEP BOOP!</text>' : '<path d="M42 52 h20 M78 52 h20" stroke="#1b1530" stroke-width="5" stroke-linecap="round"/><path d="M60 70 h20" stroke="#1b1530" stroke-width="4" stroke-linecap="round"/><text x="112" y="24" font-size="18" font-weight="800" fill="#5a9be0">Zz</text>'}${state === 'spark' ? '<text x="6" y="30" font-size="26">⚡</text><text x="112" y="70" font-size="26">🔥</text>' : ''}<rect x="40" y="86" width="60" height="38" rx="10" fill="#c9d0de"/></svg>`;
     function draw() {
-      el.innerHTML = head1('air', SF.airT) + `<div class="nline"><span class="nface"></span><span>${tr(SF.airP)}</span></div>
-        <div class="air-wrap" dir="ltr"><div class="robot-box">${robot()}</div><div class="flask">${Array.from({ length: 5 }, (_, i) => `<button class="cube ${cubes[i] || 'emptyc'}" data-i="${i}" ${cubes[i] ? '' : 'disabled'}>${cubes[i] === 'o2' ? 'O₂' : cubes[i] === 'n2' ? 'N₂' : ''}</button>`).join('')}</div>
+      el.innerHTML = head1('air', SF.airT) + `<p class="tip1">${tr(SF.airP)}</p>
+        <div class="air-wrap" dir="ltr"><div class="robot-box ${state}">${robot()}</div><div class="flask">${Array.from({ length: 5 }, (_, i) => `<button class="cube ${cubes[i] || 'emptyc'} ${i === cubes.length - 1 && fresh1 ? 'newc' : ''}" data-i="${i}" ${cubes[i] ? '' : 'disabled'}>${cubes[i] === 'o2' ? 'O₂' : cubes[i] === 'n2' ? 'N₂' : ''}</button>`).join('')}</div>
         <div class="cube-src"><button class="cube o2 big" id="addO">O₂<small>${tr(SF.o2)}</small></button><button class="cube n2 big" id="addN">N₂<small>${tr(SF.n2)}</small></button></div></div>
         <div id="airFb"></div><div class="actions"><button class="btn ghost small" id="airEmpty">${tr(SF.empty)}</button><button class="btn" id="airGo" ${cubes.length === 5 && state !== 'awake' ? '' : 'disabled'}>${tr(SF.wake)}</button></div>`;
-      const add = (k) => { if (cubes.length < 5 && state !== 'awake') { cubes.push(k); state = 'sleep'; SFX.snap(); draw(); } };
+      fresh1 = false;
+      const add = (k) => { if (cubes.length < 5 && state !== 'awake') { cubes.push(k); state = 'sleep'; SFX.snap(); fresh1 = true; draw(); } };
       el.querySelector('#addO').onclick = () => add('o2'); el.querySelector('#addN').onclick = () => add('n2');
       el.querySelectorAll('.flask .cube').forEach((b) => (b.onclick = () => { if (state === 'awake') return; cubes.splice(+b.dataset.i, 1); state = 'sleep'; draw(); }));
       el.querySelector('#airEmpty').onclick = () => { if (state === 'awake') return; cubes.length = 0; state = 'sleep'; draw(); };
@@ -1655,8 +1681,8 @@ const L1 = (() => {
   function waterTask(el) {
     const B3 = [['clean', '#8fd0ef', true], ['mud', '#8a6a3a', false], ['sea', '#3a6fc0', false]], pick = {}; let checked = false, done = false;
     function draw() {
-      el.innerHTML = head1('water', SF.wT) + `<div class="nline"><span class="nface"></span><span>${tr(SF.wP)}</span></div>
-        <div class="bottles">${B3.map(([k, col]) => { const st = checked && pick[k] !== undefined ? (pick[k] === (k === 'clean') ? 'ok' : 'no') : ''; return `<div class="btl ${st}"><svg viewBox="0 0 40 70"><rect x="14" y="2" width="12" height="10" rx="2" fill="#9aa6bd"/><path d="M10 14 h20 l4 8 v42 a4 4 0 0 1-4 4 h-20 a4 4 0 0 1-4-4 v-42z" fill="#eef4fa" stroke="#9aa6bd" stroke-width="2"/><rect x="8" y="30" width="24" height="36" rx="3" fill="${col}" opacity=".85"/>${k === 'sea' ? '<text x="20" y="54" font-size="11" text-anchor="middle" fill="#fff">NaCl</text>' : ''}${k === 'mud' ? '<circle cx="15" cy="48" r="3" fill="#5a3a1a"/><circle cx="24" cy="58" r="2.5" fill="#5a3a1a"/>' : ''}</svg><b>${tr(SF[k])}</b><div class="bs"><button class="sb" data-k="${k}" data-v="1" aria-pressed="${pick[k] === true}" ${done ? 'disabled' : ''}>💧 ${tr(SF.drink)}</button><button class="sb" data-k="${k}" data-v="0" aria-pressed="${pick[k] === false}" ${done ? 'disabled' : ''}>🚫 ${tr(SF.no)}</button></div>${st === 'no' ? `<small class="why">${tr(k === 'mud' ? SF.mudBad : k === 'sea' ? SF.seaBad : SF.cleanBad)}</small>` : ''}</div>`; }).join('')}</div>
+      el.innerHTML = head1('water', SF.wT) + `<p class="tip1">${tr(SF.wP)}</p>
+        <div class="bottles ${done ? 'win' : ''}">${B3.map(([k, col]) => { const st = checked && pick[k] !== undefined ? (pick[k] === (k === 'clean') ? 'ok' : 'no') : ''; return `<div class="btl ${st}"><svg viewBox="0 0 40 70"><rect x="14" y="2" width="12" height="10" rx="2" fill="#9aa6bd"/><path d="M10 14 h20 l4 8 v42 a4 4 0 0 1-4 4 h-20 a4 4 0 0 1-4-4 v-42z" fill="#eef4fa" stroke="#9aa6bd" stroke-width="2"/><rect x="8" y="30" width="24" height="36" rx="3" fill="${col}" opacity=".85"/>${k === 'sea' ? '<text x="20" y="54" font-size="11" text-anchor="middle" fill="#fff">NaCl</text>' : ''}${k === 'mud' ? '<circle cx="15" cy="48" r="3" fill="#5a3a1a"/><circle cx="24" cy="58" r="2.5" fill="#5a3a1a"/>' : ''}</svg><b>${tr(SF[k])}</b><div class="bs"><button class="sb" data-k="${k}" data-v="1" aria-pressed="${pick[k] === true}" ${done ? 'disabled' : ''}>💧 ${tr(SF.drink)}</button><button class="sb" data-k="${k}" data-v="0" aria-pressed="${pick[k] === false}" ${done ? 'disabled' : ''}>🚫 ${tr(SF.no)}</button></div>${st === 'no' ? `<small class="why">${tr(k === 'mud' ? SF.mudBad : k === 'sea' ? SF.seaBad : SF.cleanBad)}</small>` : ''}</div>`; }).join('')}</div>
         <div id="wFb"></div><div class="actions"><span></span><button class="btn" id="wGo" ${Object.keys(pick).length === 3 && !done ? '' : 'disabled'}>${tr(SF.check)}</button></div>`;
       el.querySelectorAll('.bottles .sb').forEach((b) => (b.onclick = () => { pick[b.dataset.k] = b.dataset.v === '1'; checked = false; SFX.pick(); draw(); }));
       el.querySelector('#wGo').onclick = () => {
@@ -1673,7 +1699,7 @@ const L1 = (() => {
     function draw() {
       const inG = temp >= 20 && temp <= 25;
       el.innerHTML = head1('heat', SF.hT) + `<div class="sky-${phase}">${phase === 'day' ? '☀️' : '🌙'} ${tr(phase === 'day' ? SF.hDay : SF.hNight)}</div>
-        <div class="thermo" dir="ltr"><div class="tz" style="left:${pct(20)}%;width:${pct(25) - pct(20)}%"></div><div class="tarrow" style="left:${pct(temp)}%"><span>${temp} °C</span></div><div class="tl"><span>0</span><span>45 °C</span></div></div>
+        <div class="feel ${msg ? 'bump' : ''}">${inG ? '😊' : temp > 25 ? '🥵' : '🥶'}</div><div class="thermo" dir="ltr"><div class="tz" style="left:${pct(20)}%;width:${pct(25) - pct(20)}%"></div><div class="tarrow" style="left:${pct(temp)}%"><span>${temp} °C</span></div><div class="tl"><span>0</span><span>45 °C</span></div></div>
         ${msg ? `<div class="feedback ${inG ? 'good' : 'try'}">${msg}</div>` : ''}
         <div class="actions"><button class="btn" id="hC" ${fin || (inG && phase === 'day') ? 'disabled' : ''}>${tr(SF.cool)}</button><button class="btn" id="hW" ${fin || inG ? 'disabled' : ''}>${tr(SF.warm)}</button></div>`;
       const press = (d) => {
@@ -1934,11 +1960,11 @@ const L2 = (() => {
   function cap(text, ms = 3200) { const c = $('caption'); c.textContent = text; c.hidden = false; c.style.opacity = 1; clearTimeout(captionTimer); captionTimer = setTimeout(() => { c.style.opacity = 0; setTimeout(() => (c.hidden = true), 350); }, ms); }
   function panel(fn) { S.panel = fn; G.control = false; const ov = $('lvOverlay'); ov.hidden = false; ov.dir = LANG === 'ar' ? 'rtl' : 'ltr'; fn($('lvPanel')); $('lvPanel').scrollTop = 0; }
   function closePanel() { if (S.cleanup) { S.cleanup(); S.cleanup = null; } $('lvOverlay').hidden = true; $('lvPanel').innerHTML = ''; S.panel = null; if (!G.dialog && !G.cine) giveControl(); }
-  const head = (i) => `<div class="eyebrow">${tr(UI.eyebrow)} · ${tr(UI.task, i + 1)}</div><h2>${tr(TASKS[i].name)}</h2><div class="nline"><span class="nface"></span><span>${tr(NLINE[TASKS[i].id])}</span></div>`;
+  const head = (i) => `<div class="eyebrow">🎯 ${i + 1} / 5</div><h2>${TASKS[i].ic} ${tr(TASKS[i].name)}</h2><div class="nline"><span class="nface"></span><span>${tr(NLINE[TASKS[i].id])}</span></div>`;
   const science = (id) => `<div class="science"><div class="k">${tr(UI.sci)}</div><p>${tr(SCI[id])}</p><div class="src">NASA</div></div>`;
   function success(el, i, extra = '') {
     SFX.success();
-    const box = document.createElement('div'); box.className = 'l2-success'; box.innerHTML = `${extra}${science(TASKS[i].id)}<div class="actions"><span></span><button class="btn green" id="l2win">${tr(UI.cont)}</button></div>`;
+    confetti(); const box = document.createElement('div'); box.className = 'l2-success'; box.innerHTML = extra + winBox(starsFor((G.nopes || 0) - (S.nope0 || 0)), tr(SCI[TASKS[i].id]), 'l2win', tr(UI.cont));
     el.appendChild(box); box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     box.querySelector('#l2win').onclick = () => award(i);
   }
@@ -1968,15 +1994,15 @@ const L2 = (() => {
     { k: 'mars', r: 0.56, s: 0.53, size: 6, col: '#d8573a', n: { en: 'Mars', ar: 'المريخ' }, f: { en: 'Mars is the Red Planet. Its dusty ground is rusty red, and it has two small moons.', ar: 'المريخ هو الكوكب الأحمر. ترابه أحمر متل الصدأ، وإله قمرين صغار.' } },
   ];
   const T1 = {
-    explore: { en: 'Tap the planets to explore them. Find Earth and Mars!', ar: 'اضغط على الكواكب لتستكشفها. لاقي الأرض والمريخ!' },
+    explore: { en: 'Tap the planets. Find Earth and Mars!', ar: 'اضغط عالكواكب. لاقي الأرض والمريخ!' },
     plan: { en: 'Plan the trip', ar: 'خطّط للرحلة' },
     pickE: { en: 'Tap EARTH: this is your launch point.', ar: 'اضغط على الأرض: هاي نقطة الانطلاق.' },
     pickM: { en: 'Now tap MARS: this is your destination.', ar: 'هلأ اضغط على المريخ: هاي وجهتك.' },
     wait: { en: 'Waiting for the best launch window…', ar: 'عم نستنى أحسن وقت للإطلاق…' },
-    route: { en: 'Choose your route. Look at the faded Mars: that is where Mars will be when you arrive.', ar: 'اختار طريقك. طلّع على المريخ الباهت: هون رح يكون المريخ لما توصل.' },
+    route: { en: 'Pick a route! The faded Mars shows where it will be.', ar: 'اختار طريق! المريخ الباهت هو مكانه لما توصل.' },
     a: { en: 'Route A: straight at Mars', ar: 'الطريق A: دغري عالمريخ' }, b: { en: 'Route B: curved, to meet Mars', ar: 'الطريق B: منحني، لنلاقي المريخ' },
-    miss: { en: 'Missed! While you were flying, Mars kept moving. Try the other route.', ar: 'ما وصلنا! ونحنا طايرين، المريخ ضلّ يتحرّك. جرّب الطريق الثاني.' },
-    hit: { en: 'You reached Mars! The curved route met Mars right where it was going to be.', ar: 'وصلت للمريخ! الطريق المنحني لاقى المريخ بالزبط بالمكان اللي كان رايح عليه.' },
+    miss: { en: 'Missed! Mars moved. Try again!', ar: 'ما وصلنا! المريخ تحرّك. جرّب كمان!' },
+    hit: { en: 'Bullseye! You reached Mars!', ar: 'إصابة! وصلت للمريخ!' },
     seen: { en: (n) => `${n} / 5 explored`, ar: (n) => `استكشفت ${n} من 5` },
     start: { en: 'Launch', ar: 'انطلاق' }, dest: { en: 'Destination', ar: 'الوجهة' }, future: { en: 'Mars in 7 months', ar: 'المريخ بعد 7 أشهر' },
   };
@@ -2085,7 +2111,7 @@ const L2 = (() => {
     life: '<svg viewBox="0 0 60 60"><rect x="12" y="6" width="36" height="48" rx="6" fill="#e3e7ef" stroke="#9aa6bd" stroke-width="3"/><circle cx="22" cy="18" r="3" fill="#9ccc3c"/><circle cx="30" cy="18" r="3" fill="#ffd27a"/><circle cx="38" cy="18" r="3" fill="#6fe0ff"/><rect x="18" y="28" width="24" height="18" rx="3" fill="#c9d0de"/></svg>',
   };
   const T2 = {
-    p: { en: 'Drag each part onto the dashed outline where it belongs. Then press Test Suit.', ar: 'اسحب كل قطعة للخط المنقّط اللي إلها. بعدها اضغط افحص البدلة.' },
+    p: { en: 'Drag the parts onto the suit!', ar: 'اسحب القطع عالبدلة!' },
     test: { en: 'Test Suit', ar: 'افحص البدلة' },
     pressure: { en: 'Pressure', ar: 'الضغط' }, oxygen: { en: 'Oxygen', ar: 'الأكسجين' }, cooling: { en: 'Cooling', ar: 'التبريد' },
     ok: { en: 'OK', ar: 'تمام' },
@@ -2120,7 +2146,7 @@ const L2 = (() => {
       const rows = [['pressure', ['helmet', 'gloves', 'boots'], T2.missP], ['oxygen', ['helmet', 'life'], T2.missO], ['cooling', ['life'], T2.missC]];
       let all = true;
       el.querySelector('#suitRes').innerHTML = rows.map(([k, need, m]) => { const mm = miss(need), ok = !mm; all = all && ok; return `<div class="rrow ${ok ? 'ok' : 'bad'}"><b>${tr(T2[k])}</b><div class="rbar"><i style="width:${ok ? 100 : 25}%"></i></div><span>${ok ? '✓ ' + tr(T2.ok) : '⚠ ' + tr(m, mm)}</span></div>`; }).join('');
-      if (all) { el.querySelector('#suitTest').disabled = true; el.querySelector('#suitRes').insertAdjacentHTML('beforeend', `<div class="feedback good">${tr(T2.allOk)}</div>`); success(el, 1); } else SFX.nope();
+      if (all) { el.querySelector('#dummy').classList.add('win'); el.querySelector('#suitTest').disabled = true; el.querySelector('#suitRes').insertAdjacentHTML('beforeend', `<div class="feedback good">${tr(T2.allOk)}</div>`); success(el, 1); } else SFX.nope();
     };
   }
 
@@ -2137,7 +2163,7 @@ const L2 = (() => {
     { k: 'skate', ic: '🛹', pts: 10, n: { en: 'Skateboard', ar: 'سكيتبورد' } },
   ];
   const T3 = {
-    p: { en: 'Tap supplies to load them into the cargo bay. The load limit is 100 points.', ar: 'اضغط على المؤن لتحمّلها بمخزن الحمولة. الحد الأقصى 100 نقطة.' },
+    p: { en: 'Load the ship! Max 100 points.', ar: 'حمّل المركبة! أقصى اشي 100 نقطة.' },
     load: { en: 'Load', ar: 'الحمولة' }, close: { en: 'Close the cargo door', ar: 'سكّر باب الحمولة' },
     heavy: { en: 'The door won’t close! The cargo is too heavy. Take some things out.', ar: 'الباب ما بيتسكّر! الحمولة تقيلة كثير. شيل شوية أغراض.' },
     missing: { en: (m) => `The door closed… but wait! The crew has no ${m}. They can’t survive the trip without it. Open the door and fix it.`, ar: (m) => `تسكّر الباب… بس استنى! الطاقم ما معه ${m}. ما بيقدروا يكمّلوا الرحلة بدونه. افتح الباب وصلّحها.` },
@@ -2171,7 +2197,7 @@ const L2 = (() => {
 
   // ---------- Task 4: Systems check ----------
   const T4 = {
-    p: { en: 'One system has a warning sign. Tap a system to see its readings.', ar: 'في نظام عليه إشارة تحذير. اضغط على أي نظام لتشوف قراءاته.' },
+    p: { en: 'Find the broken system and fix it!', ar: 'لاقي النظام الخربان وصلّحه!' },
     power: { en: 'Power', ar: 'الطاقة' }, life: { en: 'Life Support', ar: 'دعم الحياة' }, comm: { en: 'Communication', ar: 'الاتصال' },
     rd: {
       power: [{ en: 'Solar panels', ar: 'ألواح شمسية' }, { en: 'Main battery', ar: 'البطارية الرئيسية' }, { en: 'Backup battery', ar: 'البطارية الاحتياطية' }],
@@ -2234,8 +2260,8 @@ const L2 = (() => {
     { k: 'fun', ic: '📺', cost: 1, n: { en: 'Movie screens', ar: 'شاشات أفلام' }, d: { en: 'Fun, but not needed now', ar: 'حلوة، بس مش ضرورية هلأ' } },
   ];
   const T5 = {
-    alarm: { en: 'ALERT: Dust covered the solar panels. Power dropped from 10 units to 6!', ar: 'تحذير: الغبار غطّى الألواح الشمسية. الطاقة نزلت من 10 وحدات لـ 6!' },
-    p: { en: 'Switch systems on or off. You can only use 6 power units.', ar: 'شغّل أو طفّي الأنظمة. بتقدر تستخدم 6 وحدات طاقة بس.' },
+    alarm: { en: 'ALERT! Power dropped to 6!', ar: 'إنذار! الطاقة نزلت لـ 6!' },
+    p: { en: 'Only 6 power units. Choose fast!', ar: '6 وحدات طاقة بس. اختار بسرعة!' },
     used: { en: 'Power used', ar: 'الطاقة المستخدمة' }, noPow: { en: 'Not enough power! Switch something else off first.', ar: 'ما في طاقة كفاية! طفّي اشي ثاني أول.' },
     run: { en: 'Run the next 24 hours', ar: 'شغّل الـ24 ساعة الجاية' }, u: { en: 'units', ar: 'وحدات' }, on: { en: 'ON', ar: 'شغّال' }, off: { en: 'OFF', ar: 'مطفي' },
     noLife: { en: 'Without life support, the air and water systems stop. The crew can’t survive! Life support must always come first.', ar: 'بدون دعم الحياة، الهوا والماي بيوقفوا. الطاقم ما بيقدر يعيش! دعم الحياة لازم يكون دايماً أولاً.' },
@@ -2295,7 +2321,7 @@ const L2 = (() => {
     } else if (n < 5) { setObjective('l2_go'); cap(tr(TASKS[S.next].name), 2200); }
   }
   function enterTask(i) {
-    S.cur = i; setObjective('l2_task'); SFX.whoosh(0);
+    S.cur = i; S.nope0 = G.nopes || 0; setObjective('l2_task'); SFX.whoosh(0);
     panel([taskDest, taskSuit, taskPack, taskSys, taskEmerg][i]);
   }
   function finish() {
