@@ -454,7 +454,7 @@ const T = THREE;
 const TXT = {
   title: { en: 'Junior <span>Astronaut</span>', ar: 'رائد <span>الفضاء</span> الصغير' },
   sub: { en: 'Prologue · The Invitation', ar: 'المقدمة · الدعوة' },
-  intro: { en: 'A mysterious box has arrived for you. Open it, follow the green light, and meet the friend who will guide your journey to Mars.', ar: 'وصلك صندوق غامض! افتحه، واتبع الضوء الأخضر، وتعرّف على الصديق اللي رح يرافقك برحلتك إلى المريخ.' },
+  intro: { en: 'A mysterious box has arrived for you!', ar: 'وصلك صندوق غامض!' },
   nameLbl: { en: 'What should we call you, explorer?', ar: 'شو اسمك يا مستكشف؟' },
   nameNote: { en: 'A first name or a nickname is perfect.', ar: 'اسمك الأول أو لقبك بيكفي.' },
   start: { en: 'Start the adventure', ar: 'ابدأ المغامرة' },
@@ -469,8 +469,8 @@ const TXT = {
   i_eyebrow: { en: 'Junior Astronaut Program', ar: 'برنامج رواد الفضاء الصغار' },
   i_title: { en: 'Official Invitation', ar: 'دعوة رسمية' },
   i_body: {
-    en: (n) => `<p>Dear <b>${n}</b>,</p><p>You have been chosen to join the <b>Junior Astronaut Program</b>. One day, people will live and work on Mars, and explorers like you will help get them there.</p><p>But first, a secret place is waiting for you. There, you will begin to learn what it takes to explore the Red Planet.</p><p>Your ride is already on its way. <b>Look outside.</b></p>`,
-    ar: (n) => `<p>عزيزي/عزيزتي <b>${n}</b>،</p><p>تم اختيارك للانضمام إلى <b>برنامج رواد الفضاء الصغار</b>. في يوم من الأيام رح يعيش الناس ويشتغلوا على المريخ، ومستكشفين مثلك رح يساعدوهم يوصلوا.</p><p>بس أول اشي، في مكان سرّي عم يستناك. هناك رح تبلّش تتعلّم شو بيلزم لتستكشف الكوكب الأحمر.</p><p>مركبتك صارت بالطريق. <b>طلّ برّا!</b></p>`,
+    en: (n) => `<p>Dear <b>${n}</b>,</p><p>You are invited to become a <b>Junior Astronaut</b>!</p><p>Your ride is on its way. <b>Look outside.</b></p>`,
+    ar: (n) => `<p>عزيزي/عزيزتي <b>${n}</b>،</p><p>إنت مدعو لتصير <b>رائد فضاء صغير</b>!</p><p>مركبتك بالطريق. <b>طلّ برّا!</b></p>`,
   },
   i_sig: { en: 'Mission Control<small>Junior Astronaut Program · inspired by NASA science</small>', ar: 'مركز التحكم بالمهمة<small>برنامج رواد الفضاء الصغار · مستوحى من علوم ناسا</small>' },
   i_continue: { en: 'Continue', ar: 'متابعة' },
@@ -506,10 +506,8 @@ const TXT = {
   dnReplay: { en: 'Replay prologue', ar: 'أعد المقدمة' },
 };
 const NURI_INTRO = [
-  { expr: 'wow', en: 'Oh! A visitor! Hello, hello!', ar: 'أوه! زائر! أهلاً أهلاً!' },
-  { expr: 'happy', en: (n) => `You must be ${n}. I’m Nuri, your smart companion for this adventure! I’m a little AI helper from far, far away.`, ar: (n) => `أكيد إنت ${n}! أنا نوري، مرافقك الذكي بهالمغامرة! أنا مساعد ذكي صغير جاي من بعيد كثير.` },
-  { expr: 'idle', en: 'I will fly right next to you the whole way. When something is new or tricky, tap “Ask Nuri” and I will explain it or give you a hint.', ar: 'رح أطير جنبك طول الطريق. لما يصادفك اشي جديد أو صعب، اضغط "اسأل نوري" وأنا بشرحلك أو بعطيك تلميح.' },
-  { expr: 'happy', en: 'But the decisions are always yours, explorer!', ar: 'بس القرارات دايماً إلك يا مستكشف!' },
+  { expr: 'wow', en: (n) => `Hi ${n}! I’m Nuri, your smart helper.`, ar: (n) => `أهلاً ${n}! أنا نوري، مساعدك الذكي.` },
+  { expr: 'happy', en: 'Tap “Ask Nuri” if you need a hint!', ar: 'اضغط "اسأل نوري" إذا بدك تلميح!' },
 ];
 const QA = [
   { q: { en: 'Where are we?', ar: 'وين إحنا؟' }, a: { en: 'We are in the Atacama Desert in northern Chile, between the Andes mountains and the Pacific Ocean. See the tall cone far away? That is a volcano!', ar: 'إحنا بصحراء أتاكاما في شمال تشيلي، بين جبال الأنديز والمحيط الهادئ. شايف الجبل المخروطي البعيد؟ هاد بركان!' } },
@@ -548,7 +546,6 @@ const SFX = (() => {
     const o1 = ac.createOscillator(), o2 = ac.createOscillator(), bf = ac.createBiquadFilter(); o1.type = 'sawtooth'; o1.frequency.value = 92; o2.type = 'sine'; o2.frequency.value = 276; bf.type = 'lowpass'; bf.frequency.value = 700;
     beamG = ac.createGain(); beamG.gain.value = 0; o1.connect(bf); o2.connect(bf); bf.connect(beamG); beamG.connect(master); o1.start(); o2.start();
     setAmb(amb);
-    setInterval(() => { if (!ac || muted || ac.state !== 'running' || document.hidden) return; if (Math.random() < 0.62) { const sc = SC[amb] || SC.desert; mi = Math.max(0, Math.min(sc.length - 1, mi + [-2, -1, -1, 0, 1, 1, 2][(Math.random() * 7) | 0])); tone(sc[mi], 1.5, 'sine', 0.035); if (Math.random() < 0.25) tone(sc[mi] / 2, 2, 'triangle', 0.025); } }, 560);
   }
   function tone(f, d = 0.15, type = 'sine', v = 0.2, when = 0, slide = 0) {
     if (!ac) return; const t0 = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
@@ -562,14 +559,13 @@ const SFX = (() => {
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(v, t0 + d * 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
     src.connect(fl); fl.connect(g); g.connect(master); src.start(t0); src.stop(t0 + d + 0.05);
   }
-  function setAmb(n) { amb = n; if (windG) windG.gain.setTargetAtTime(WIND[n] || 0, ac.currentTime, 0.8); }
+  function setAmb(n) { amb = n; }
   const seq = (arr, d, type, v, gap) => arr.forEach((f, i) => tone(f, d, type, v, i * gap));
   addEventListener('pointerdown', init, true); addEventListener('keydown', init, true);
-  document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('button') && !e.target.closest('#sndBtn')) tone(660, 0.06, 'triangle', 0.07); });
   $('sndBtn').addEventListener('click', () => { init(); muted = !muted; if (master) master.gain.setTargetAtTime(muted ? 0 : 0.9, ac.currentTime, 0.05); $('sndBtn').textContent = muted ? '\u{1F507}' : '\u{1F50A}'; });
   return {
     init, setAmb,
-    talk: (who) => { if (who === 'nuri') for (let i = 0; i < 3; i++) tone(800 + Math.random() * 600, 0.07, 'triangle', 0.06, i * 0.07); else if (who === 'kid') for (let i = 0; i < 2; i++) tone(430 + Math.random() * 150, 0.09, 'sine', 0.08, i * 0.09); else tone(520, 0.09, 'sine', 0.08, 0, 1.4); },
+    talk: () => {},
     sparkle: () => seq([1046.5, 1318.5, 1568, 2093], 0.25, 'sine', 0.07, 0.07),
     open: () => { seq([783.99, 1046.5, 1318.5, 1568, 2093], 0.3, 'sine', 0.08, 0.09); noise(0.6, 500, 3500, 0.06); },
     success: () => { seq([523.25, 659.25, 783.99, 1046.5], 0.3, 'triangle', 0.11, 0.12); tone(1318.5, 0.7, 'sine', 0.09, 0.5); },
@@ -580,12 +576,12 @@ const SFX = (() => {
     land: () => { noise(0.55, 240, 60, 0.3, 0, 0.7, 'lowpass'); tone(72, 0.45, 'sine', 0.2, 0, 0.5); },
     step: (indoor) => noise(0.07, indoor ? 900 : 480, indoor ? 500 : 190, indoor ? 0.045 : 0.085, 0, 1, 'lowpass'),
     jump: () => tone(300, 0.18, 'sine', 0.07, 0, 2),
-    pick: () => tone(440, 0.05, 'square', 0.035),
+    pick: () => {},
     snap: () => { tone(660, 0.08, 'triangle', 0.1); tone(990, 0.14, 'sine', 0.08, 0.06); },
     nope: () => tone(210, 0.16, 'sine', 0.08, 0, 0.7),
     stamp: () => { noise(0.18, 400, 90, 0.35, 0, 0.8, 'lowpass'); tone(110, 0.2, 'sine', 0.25, 0, 0.5); [1046.5, 1318.5, 1568].forEach((f, i) => tone(f, 0.35, 'triangle', 0.09, 0.18 + i * 0.09)); },
     alarm: () => { for (let i = 0; i < 4; i++) { tone(880, 0.22, 'square', 0.05, i * 0.5); tone(660, 0.22, 'square', 0.05, i * 0.5 + 0.25); } },
-    beam: (on) => { if (beamG) beamG.gain.setTargetAtTime(on ? 0.045 : 0, ac.currentTime, 0.15); },
+    beam: () => {},
   };
 })();
 
@@ -1046,8 +1042,7 @@ function updateNuriFollow(dt) {
   const side = new T.Vector3(Math.cos(P.yaw), 0, -Math.sin(P.yaw));
   nuriTarget.copy(P.pos).addScaledVector(side, -0.55).add(new T.Vector3(0, 1.45, 0)).addScaledVector(new T.Vector3(Math.sin(P.yaw), 0, Math.cos(P.yaw)), -0.15);
   nuri.position.lerp(nuriTarget, Math.min(1, dt * 4));
-  const look = camera.position.clone(); look.y = nuri.position.y;
-  const want = Math.atan2(look.x - nuri.position.x, look.z - nuri.position.z);
+  const want = P.yaw;
   let d = want - nuri.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); nuri.rotation.y += d * Math.min(1, dt * 5);
 }
 
@@ -1387,36 +1382,20 @@ const L1 = (() => {
   const TALK = {
     start: [
       { who: 'kid', en: 'Where are we? Is this Mars?', ar: 'وين إحنا؟ هل هاد المريخ؟' },
-      { who: 'nuri', expr: 'happy', en: 'Hmm… why don’t you find out yourself? I have something for you!', ar: 'امم… ليش ما تكتشف لحالك؟ معي اشي إلك!' },
-      { who: 'nuri', expr: 'wow', en: 'It’s my electronic map… oops! It broke into pieces. Can you fix it?', ar: 'هاي خريطتي الإلكترونية… أوبس! تكسّرت لقطع. بتقدر تصلّحها؟' },
+      { who: 'nuri', expr: 'wow', en: 'Find out yourself! Fix my broken map.', ar: 'اكتشف لحالك! صلّح خريطتي المكسورة.' },
     ],
     afterMap: [
-      { who: 'kid', en: 'Wait… we’re still on Earth?!', ar: 'استنى… إحنا لسا على الأرض؟!' },
-      { who: 'nuri', expr: 'happy', en: 'Exactly! Welcome to the Atacama Desert, one of the driest places on Earth!', ar: 'بالزبط! أهلاً فيك بصحراء أتاكاما، واحدة من أجفّ الأماكن على الأرض!' },
-      { who: 'kid', en: 'But why does it look so much like Mars?', ar: 'طيب ليش بتشبه المريخ هالقد؟' },
-      { who: 'nuri', expr: 'idle', en: 'Great question! NASA scientists have studied this desert because some of its conditions are similar to those on Mars. That’s why it’s a great place to begin our adventure!', ar: 'سؤال رائع! علماء ناسا درسوا هالصحراء لأن بعض ظروفها بتشبه ظروف المريخ. عشان هيك هي مكان ممتاز نبلّش فيه مغامرتنا!' },
-      { who: 'nuri', expr: 'happy', en: 'Let’s explore! Walk to the glowing lights and see what we discover.', ar: 'يلا نستكشف! امشِ للأضواء اللي بتلمع وخلينا نشوف شو بنكتشف.' },
+      { who: 'kid', en: 'We’re still on Earth?!', ar: 'إحنا لسا على الأرض؟!' },
+      { who: 'nuri', expr: 'happy', en: 'Yes! The Atacama Desert. NASA studies it because parts of it are like Mars. Let’s explore!', ar: 'إيه! صحراء أتاكاما. ناسا بتدرسها لأن أجزاء منها بتشبه المريخ. يلا نستكشف!' },
     ],
-    dry: [
-      { who: 'nuri', expr: 'idle', en: 'Look around! Some parts of this desert receive very little rain. That’s one reason scientists study it when preparing to explore Mars.', ar: 'طلّع حواليك! في أجزاء من هالصحراء بينزل فيها مطر قليل كثير. وهاد واحد من الأسباب اللي بتخلّي العلماء يدرسوها وهم بيتحضّروا لاستكشاف المريخ.' },
-    ],
-    dunes: [
-      { who: 'nuri', expr: 'happy', en: 'See those rocks and sand dunes? Wind can shape landscapes like these, both here on Earth and on Mars!', ar: 'شايف هالصخور والكثبان الرملية؟ الريح بتقدر تشكّل مناظر متل هاي، هون على الأرض وكمان على المريخ!' },
-    ],
-    plant: [
-      { who: 'kid', en: 'Wait! Something is growing here!', ar: 'استنى! في اشي عم ينبت هون!' },
-      { who: 'nuri', expr: 'wow', en: 'Good eye! Even very dry places can support life in certain areas. Scientists study how living things survive in extreme environments.', ar: 'عينك قوية! حتى الأماكن الجافة كثير ممكن يكون فيها حياة ببعض المناطق. العلماء بيدرسوا كيف الكائنات الحية بتعيش بالبيئات القاسية.' },
-    ],
+    dry: [{ who: 'nuri', expr: 'idle', en: 'It almost never rains here, a bit like Mars.', ar: 'تقريباً ما بتشتي هون، شوي متل المريخ.' }],
+    dunes: [{ who: 'nuri', expr: 'happy', en: 'Wind shapes rocks and dunes, here and on Mars!', ar: 'الريح بتشكّل الصخور والكثبان، هون وعلى المريخ!' }],
+    plant: [{ who: 'nuri', expr: 'wow', en: 'A plant! Life can survive even in very dry places.', ar: 'نبتة! الحياة بتقدر تعيش حتى بالأماكن الجافة.' }],
     hill: [
-      { who: 'kid', en: 'So… is this place just like Mars?', ar: 'يعني… هالمكان متل المريخ بالزبط؟' },
-      { who: 'nuri', expr: 'idle', en: 'Not exactly! We’re still on Earth, where we have breathable air. Mars has a much thinner atmosphere, colder conditions, and many more challenges.', ar: 'مش بالزبط! إحنا لسا على الأرض، وهون في هوا بنقدر نتنفّسه. المريخ غلافه الجوي أرقّ بكثير، وأبرد، وفيه تحديات أكثر بكثير.' },
-      { who: 'kid', en: 'Then how could astronauts survive there?', ar: 'طيب كيف رواد الفضاء بيقدروا يعيشوا هناك؟' },
-      { who: 'nuri', expr: 'happy', en: 'That’s exactly what we’re going to learn!', ar: 'هاد بالزبط اللي رح نتعلّمه!' },
+      { who: 'kid', en: 'Is this just like Mars?', ar: 'هاد متل المريخ بالزبط؟' },
+      { who: 'nuri', expr: 'idle', en: 'Not exactly! Mars has thin air and is much colder. Let’s learn how astronauts survive there!', ar: 'مش بالزبط! هوا المريخ خفيف وهو أبرد بكثير. يلا نتعلّم كيف رواد الفضاء بيعيشوا هناك!' },
     ],
-    academy: [
-      { who: 'kid', en: 'What’s that place?', ar: 'شو هالمكان؟' },
-      { who: 'nuri', expr: 'wow', en: 'That’s the Junior Astronaut Training Academy! Before we travel to space, we need to learn how astronauts prepare for their missions.', ar: 'هاي أكاديمية تدريب رواد الفضاء الصغار! قبل ما نسافر للفضاء، لازم نتعلّم كيف رواد الفضاء بيتحضّروا لمهماتهم.' },
-    ],
+    academy: [{ who: 'nuri', expr: 'wow', en: 'That’s the Junior Astronaut Training Academy! Let’s go!', ar: 'هاي أكاديمية تدريب رواد الفضاء الصغار! يلا!' }],
   };
   const FACTS = [
     { en: 'You are in the Atacama Desert in Chile, South America, one of the driest places on Earth.', ar: 'إنت بصحراء أتاكاما في تشيلي بأمريكا الجنوبية، واحدة من أجفّ الأماكن على الأرض.' },
@@ -1705,11 +1684,11 @@ const L2 = (() => {
     emerg: { en: 'Uh-oh! We don’t have enough power for everything. What matters most?', ar: 'أوه لا! ما عنا طاقة تكفي كل اشي. شو الأهم؟' },
   };
   const SCI = {
-    dest: { en: 'Earth and Mars both travel around the Sun, and Earth moves faster. Mission planners launch when the planets are lined up well, which happens about every 26 months. The spacecraft then flies a curved path to meet Mars where it will be. The trip takes about 7 months.', ar: 'الأرض والمريخ بيدوروا حوالين الشمس، والأرض أسرع. مخططين المهمات بيطلقوا لما يكون ترتيب الكواكب مناسب، وهاد بيصير تقريباً كل 26 شهر. بعدها المركبة بتطير بطريق منحني لتلاقي المريخ بالمكان اللي رح يكون فيه. الرحلة بتاخد حوالي 7 أشهر.' },
-    suit: { en: 'A spacesuit is like a small personal spacecraft. It gives astronauts oxygen to breathe, keeps the right pressure around their body, controls their temperature, and protects them from dust and tiny space rocks. Water flowing through tubes in a special undergarment keeps them cool.', ar: 'بدلة الفضاء متل مركبة فضائية صغيرة خاصة. بتعطي رائد الفضاء أكسجين ليتنفّس، وبتحافظ على الضغط المناسب حوالين جسمه، وبتتحكّم بحرارته، وبتحميه من الغبار والصخور الفضائية الصغيرة. وفي ماي بتمشي بأنابيب جوّا لبس خاص تحت البدلة لتبرّده.' },
-    pack: { en: 'A crewed trip to Mars and back could take about two to three years, and there are no stores on the way. NASA scientists study how to make food that lasts for years and how to recycle water. The International Space Station already recycles about 98% of its water.', ar: 'رحلة رواد الفضاء للمريخ والرجعة ممكن تاخد سنتين لثلاث سنين تقريباً، وما في دكاكين عالطريق. علماء ناسا بيدرسوا كيف يعملوا أكل بيضل صالح لسنين، وكيف يعيدوا تدوير الماي. ومحطة الفضاء الدولية أصلاً بتعيد تدوير حوالي 98% من الماي.' },
-    sys: { en: 'A spacecraft has many systems that must all work: power, life support (air, water and temperature) and communication with Earth. Radio messages between Earth and Mars take between about 3 and 22 minutes each way, so the crew must be able to fix problems themselves.', ar: 'المركبة فيها أنظمة كثير لازم كلها تشتغل: الطاقة، ودعم الحياة (الهوا والماي والحرارة)، والاتصال مع الأرض. الرسائل بين الأرض والمريخ بتاخد بين 3 و22 دقيقة تقريباً بكل اتجاه، فالطاقم لازم يقدر يصلّح المشاكل بنفسه.' },
-    emerg: { en: 'When power runs low, crews and mission controllers switch off the least important systems first. Keeping the crew alive always comes first. NASA has even switched off science instruments on its faraway Voyager spacecraft to save power and keep them working longer.', ar: 'لما الطاقة تقلّ، الطاقم ومركز التحكم بيطفّوا الأنظمة الأقل أهمية أول. حماية حياة الطاقم دايماً أولاً. حتى ناسا طفّت أجهزة علمية بمركبات فوياجر البعيدة لتوفّر طاقة وتضلّها شغالة أطول.' },
+    dest: { en: 'Earth moves faster than Mars. We launch about every 26 months and fly a curved path that takes about 7 months.', ar: 'الأرض أسرع من المريخ. بنطلق تقريباً كل 26 شهر وبنطير بطريق منحني بياخد حوالي 7 أشهر.' },
+    suit: { en: 'A spacesuit gives oxygen, keeps the right pressure, and keeps the astronaut cool.', ar: 'بدلة الفضاء بتعطي أكسجين، وبتحافظ على الضغط، وبتبرّد رائد الفضاء.' },
+    pack: { en: 'A Mars trip could take 2 to 3 years, with no stores on the way. Every kilogram counts.', ar: 'رحلة المريخ ممكن تاخد 2 لـ 3 سنين، وما في دكاكين عالطريق. كل كيلو بيفرق.' },
+    sys: { en: 'Messages to Earth take up to 22 minutes, so the crew must fix problems themselves.', ar: 'الرسائل للأرض بتاخد لحد 22 دقيقة، فالطاقم لازم يصلّح المشاكل بنفسه.' },
+    emerg: { en: 'When power is low, life support always comes first.', ar: 'لما تقلّ الطاقة، دعم الحياة دايماً أولاً.' },
   };
   const LEARN = {
     dest: { en: 'Planets keep moving, so we aim for where Mars will be.', ar: 'الكواكب بتضلّ تتحرّك، فبنقصد المكان اللي رح يكون فيه المريخ.' },
@@ -2157,9 +2136,7 @@ const L2 = (() => {
     if (n >= 5 && !S.launchOpen) {
       S.launchOpen = true; setObjective(null);
       showDialog([
-        { who: 'nuri', expr: 'wow', en: 'You did it! All five stamps! You are a real Junior Astronaut now!', ar: 'عملتها! الأختام الخمسة كلها! صرت رائد فضاء صغير حقيقي!' },
-        { who: 'kid', en: 'So… are we going to Mars now?', ar: 'يعني… رح نروح عالمريخ هلأ؟' },
-        { who: 'nuri', expr: 'happy', en: 'Look! The launch bay is opening. Let’s go!', ar: 'طلّع! منصة الإطلاق عم تنفتح. يلا!' },
+        { who: 'nuri', expr: 'wow', en: 'All five stamps! The launch bay is open!', ar: 'الأختام الخمسة! منصة الإطلاق انفتحت!' },
       ], () => { SFX.whoosh(1); S.phase = 'launch'; setObjective('l2_launch'); giveControl(); });
     } else if (n < 5) { setObjective('l2_go'); cap(tr(TASKS[S.next].name), 2200); }
   }
@@ -2209,10 +2186,7 @@ const L2 = (() => {
     $('helpBtn').hidden = false; $('helpLbl').textContent = t('help'); setObjective(null); renderPassBtn(); G.control = false;
     SFX.success();
     showDialog([
-      { who: 'nuri', expr: 'happy', en: 'Welcome to the Junior Astronaut Training Academy!', ar: 'أهلاً فيك بأكاديمية تدريب رواد الفضاء الصغار!' },
-      { who: 'kid', en: 'Wow! It’s huge! What do we do here?', ar: 'واو! كبيرة كثير! شو بنعمل هون؟' },
-      { who: 'nuri', expr: 'idle', en: 'There are five training rooms. Each one teaches something every astronaut must know before going to Mars.', ar: 'في خمس غرف تدريب. كل وحدة بتعلّمك اشي لازم يعرفه كل رائد فضاء قبل ما يروح عالمريخ.' },
-      { who: 'nuri', expr: 'happy', en: 'Finish a room to earn a stamp in your Astronaut Passport. Collect all five, and the launch bay will open!', ar: 'خلّص الغرفة لتاخد ختم بجواز سفر رائد الفضاء. اجمع الخمسة، ومنصة الإطلاق بتنفتح!' },
+      { who: 'nuri', expr: 'happy', en: 'Welcome to the Academy! Finish 5 rooms to earn 5 stamps.', ar: 'أهلاً فيك بالأكاديمية! خلّص 5 غرف لتاخد 5 أختام.' },
     ], () => { setExpr(girl, 'happy'); setObjective('l2_go'); giveControl(); });
   }
   function relang() {
@@ -2245,11 +2219,11 @@ function loop() {
   else if (!G.dialog) { if (L1.roverMode()) L1.updateRover(dt); else { updatePlayer(dt); followCamera(dt); } }
   if (G.scene === 'level1') L1.update(dt, time);
   if (G.scene === 'level2') L2.update(dt, time);
-  if (girl.visible) animateGirl(girl, G.cine ? 0 : P.speed, dt, !P.onGround && !G.cine, time);
+  if (!G.control && !G.cine) { P.vel.x = P.vel.z = 0; P.speed = 0; }
+  if (girl.visible) animateGirl(girl, G.cine || !G.control ? 0 : P.speed, dt, !P.onGround && !G.cine && G.control, time);
   if (nuri.visible) { animateNuri(nuri, time, dt); if (G.nuriJoined && !G.cine) updateNuriFollow(dt); }
   if (ship.visible) animateShip(ship, time);
   SFX.beam(ship.visible && ship.userData.len > 0.05);
-  if (G.control && P.onGround && P.speed > 0.6) { const sd = Math.sin(girl.userData.phase) > 0; if (sd !== loop.side) { loop.side = sd; SFX.step(G.scene === 'bedroom' || G.scene === 'level2'); } }
   if (G.scene === 'bedroom' || G.scene === 'title') { const b = ENV.bedroom.userData.box; if (!G.boxOpened) { b.root.position.y = Math.abs(Math.sin(time * 2.5)) * 0.04; boxLight.position.set(b.root.position.x, 0.9, b.root.position.z); if (Math.random() < dt * 4) burst(new T.Vector3(b.root.position.x + (Math.random() - 0.5) * 0.6, 0.6, b.root.position.z + (Math.random() - 0.5) * 0.6), 0x8fd0ef, 1, 0.2, 0.5); } ENV.bedroom.userData.globe.rotation.y = time * 0.3; ENV.bedroom.userData.mobile.rotation.y = time * 0.25; }
   if (G.scene === 'desert' && G.control && !G.nuriMet) { G.desertTime += dt; const d = Math.hypot(P.pos.x - NURI_ROCK.x, P.pos.z - NURI_ROCK.z); if (d < 7.5 || G.desertTime > 16) meetNuri(); }
   if (G.scene === 'desert' || G.scene === 'landing' || G.scene === 'level1') { sun.position.copy(P.pos).add(new T.Vector3(30, 26, 18)); sun.target.position.copy(P.pos); }
